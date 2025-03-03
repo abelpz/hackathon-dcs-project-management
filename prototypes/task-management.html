@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DCS Project Management - Task Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Theia specific styles */
+        .theia-icon {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 8px;
+        }
+        .theia-activity-bar {
+            width: 50px;
+            background-color: #333333;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 10;
+        }
+        .theia-sidebar {
+            width: 260px;
+            background-color: #252526;
+            height: 100vh;
+            position: fixed;
+            left: 50px;
+            top: 30px;
+            z-index: 5;
+            color: #cccccc;
+            overflow-y: auto;
+            bottom: 22px;
+        }
+        .theia-editor-area {
+            margin-left: 310px;
+            margin-top: 30px;
+            margin-bottom: 22px;
+            min-height: calc(100vh - 52px);
+            background-color: #1e1e1e;
+            overflow-y: auto;
+            color: #cccccc;
+        }
+        .theia-top-panel {
+            height: 30px;
+            background-color: #3c3c3c;
+            color: #cccccc;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 9;
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+        }
+        .theia-status-bar {
+            height: 22px;
+            background-color: #007acc;
+            color: white;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 9;
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+            padding: 0 10px;
+        }
+        /* Custom scrollbar for Theia look */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e1e1e;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #555;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #666;
+        }
+        /* Task sections for dark theme */
+        .task-section {
+            background-color: #2d2d2d;
+            border: 1px solid #3e3e3e;
+        }
+        .task-status-open {
+            background-color: rgba(0, 122, 204, 0.2);
+            color: #4dabf7;
+        }
+        .task-status-in-progress {
+            background-color: rgba(255, 170, 0, 0.2);
+            color: #ffc107;
+        }
+        .task-status-completed {
+            background-color: rgba(35, 134, 54, 0.2);
+            color: #40c057;
+        }
+        .task-priority-high {
+            background-color: rgba(220, 38, 38, 0.2);
+            color: #ef4444;
+        }
+        .task-priority-medium {
+            background-color: rgba(255, 170, 0, 0.2);
+            color: #ffc107;
+        }
+        .task-priority-low {
+            background-color: rgba(35, 134, 54, 0.2);
+            color: #40c057;
+        }
+    </style>
+</head>
+<body class="bg-[#1e1e1e] text-gray-300 m-0 p-0">
+    <!-- Theia Top Menu Bar -->
+    <div class="theia-top-panel px-2">
+        <div class="flex space-x-4">
+            <span>File</span>
+            <span>Edit</span>
+            <span>View</span>
+            <span>Go</span>
+            <span>Run</span>
+            <span>Terminal</span>
+            <span>Help</span>
+        </div>
+    </div>
+
+    <!-- Theia Activity Bar (Left) -->
+    <div class="theia-activity-bar flex flex-col items-center pt-3">
+        <div class="theia-icon text-blue-500 bg-[#333333] rounded-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+            </svg>
+        </div>
+        <div class="theia-icon text-white">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+        </div>
+        <div class="theia-icon text-blue-500 bg-[#505050] rounded-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+        </div>
+    </div>
+
+    <!-- Theia Sidebar -->
+    <div class="theia-sidebar">
+        <div class="p-2 text-sm font-semibold flex justify-between items-center border-b border-gray-700">
+            <span>DCS PROJECT MANAGER</span>
+            <button class="text-gray-400 hover:text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                </svg>
+            </button>
+        </div>
+        <div class="p-2">
+            <div class="mb-2">
+                <div class="flex items-center justify-between text-sm mb-1">
+                    <span>PROJECTS</span>
+                    <div class="flex space-x-1">
+                        <button class="text-gray-400 hover:text-white">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="space-y-1 text-sm">
+                    <div class="flex items-center pl-2 py-1 text-blue-400 bg-[#37373d] rounded">
+                        <span>Genesis Translation Project</span>
+                    </div>
+                    <div class="flex items-center pl-2 py-1 hover:bg-[#2a2d2e] rounded">
+                        <span>Psalms Translation Project</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Theia Editor Area (Main Content) -->
+    <div class="theia-editor-area px-6 py-4">
+        <!-- Task Management Header -->
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-200">Task Management</h1>
+                <p class="text-gray-400 mt-1">Manage and track all tasks across projects</p>
+            </div>
+            <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition flex items-center text-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Create New Task
+            </button>
+        </div>
+
+        <!-- Filters and Search -->
+        <div class="task-section rounded-lg p-4 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <!-- Search -->
+                <div class="md:col-span-2">
+                    <div class="relative">
+                        <input type="text" placeholder="Search tasks..." class="w-full bg-[#3c3c3c] text-gray-300 rounded px-4 py-2 pl-10 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 absolute left-3 top-2.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                </div>
+                <!-- Status Filter -->
+                <div>
+                    <select class="w-full bg-[#3c3c3c] text-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        <option value="">All Statuses</option>
+                        <option value="open">Open</option>
+                        <option value="in-progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                </div>
+                <!-- Milestone Filter -->
+                <div>
+                    <select class="w-full bg-[#3c3c3c] text-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        <option value="">All Milestones</option>
+                        <option value="initial-translation">Initial Translation</option>
+                        <option value="review">Review Phase</option>
+                        <option value="final">Final Review</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Task List -->
+        <div class="task-section rounded-lg">
+            <!-- Task List Header -->
+            <div class="grid grid-cols-12 gap-4 p-4 border-b border-gray-700 text-sm font-medium text-gray-400">
+                <div class="col-span-4">Task</div>
+                <div class="col-span-2">Assigned To</div>
+                <div class="col-span-2">Due Date</div>
+                <div class="col-span-2">Status</div>
+                <div class="col-span-2">Milestone</div>
+            </div>
+
+            <!-- Task Items -->
+            <div class="divide-y divide-gray-700">
+                <!-- Task 1 -->
+                <div class="grid grid-cols-12 gap-4 p-4 hover:bg-[#2a2d2e] cursor-pointer">
+                    <div class="col-span-4">
+                        <div class="text-sm font-medium text-gray-200">Review Genesis Chapter 1 Translation</div>
+                        <div class="text-xs text-gray-400 mt-1">TASK-123</div>
+                    </div>
+                    <div class="col-span-2 flex items-center">
+                        <img class="h-6 w-6 rounded-full" src="https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp" alt="User avatar">
+                        <span class="ml-2 text-sm">Sarah Smith</span>
+                    </div>
+                    <div class="col-span-2 flex items-center text-sm">Mar 15, 2024</div>
+                    <div class="col-span-2 flex items-center">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium task-status-in-progress">
+                            In Progress
+                        </span>
+                    </div>
+                    <div class="col-span-2 flex items-center">
+                        <span class="text-sm text-gray-300">Initial Translation</span>
+                    </div>
+                </div>
+
+                <!-- Task 2 -->
+                <div class="grid grid-cols-12 gap-4 p-4 hover:bg-[#2a2d2e] cursor-pointer">
+                    <div class="col-span-4">
+                        <div class="text-sm font-medium text-gray-200">Update Project Glossary</div>
+                        <div class="text-xs text-gray-400 mt-1">TASK-124</div>
+                    </div>
+                    <div class="col-span-2 flex items-center">
+                        <img class="h-6 w-6 rounded-full" src="https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp" alt="User avatar">
+                        <span class="ml-2 text-sm">John Doe</span>
+                    </div>
+                    <div class="col-span-2 flex items-center text-sm">Mar 20, 2024</div>
+                    <div class="col-span-2 flex items-center">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium task-status-open">
+                            Open
+                        </span>
+                    </div>
+                    <div class="col-span-2 flex items-center">
+                        <span class="text-sm text-gray-300">Review Phase</span>
+                    </div>
+                </div>
+
+                <!-- Task 3 -->
+                <div class="grid grid-cols-12 gap-4 p-4 hover:bg-[#2a2d2e] cursor-pointer">
+                    <div class="col-span-4">
+                        <div class="text-sm font-medium text-gray-200">Review Hebrew Terms Consistency</div>
+                        <div class="text-xs text-gray-400 mt-1">TASK-125</div>
+                    </div>
+                    <div class="col-span-2 flex items-center">
+                        <img class="h-6 w-6 rounded-full" src="https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp" alt="User avatar">
+                        <span class="ml-2 text-sm">David Wilson</span>
+                    </div>
+                    <div class="col-span-2 flex items-center text-sm">Mar 10, 2024</div>
+                    <div class="col-span-2 flex items-center">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium task-status-completed">
+                            Completed
+                        </span>
+                    </div>
+                    <div class="col-span-2 flex items-center">
+                        <span class="text-sm text-gray-300">Final Review</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="flex justify-between items-center mt-6">
+            <div class="text-sm text-gray-400">
+                Showing 1-3 of 24 tasks
+            </div>
+            <div class="flex space-x-2">
+                <button class="px-3 py-1 rounded bg-[#3c3c3c] text-gray-300 hover:bg-[#4b4b4b] text-sm">Previous</button>
+                <button class="px-3 py-1 rounded bg-[#3c3c3c] text-gray-300 hover:bg-[#4b4b4b] text-sm">Next</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Theia Status Bar -->
+    <div class="theia-status-bar">
+        <div class="flex items-center space-x-4">
+            <span>Genesis Translation Project</span>
+            <span>24 Total Tasks</span>
+            <span>3 High Priority</span>
+        </div>
+    </div>
+</body>
+</html> 

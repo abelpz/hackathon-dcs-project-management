@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DCS Project Management - Project Details</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Theia specific styles */
+        .theia-icon {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 8px;
+        }
+        .theia-activity-bar {
+            width: 50px;
+            background-color: #333333;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 10;
+        }
+        .theia-sidebar {
+            width: 260px;
+            background-color: #252526;
+            height: 100vh;
+            position: fixed;
+            left: 50px;
+            top: 30px;
+            z-index: 5;
+            color: #cccccc;
+            overflow-y: auto;
+            bottom: 22px;
+        }
+        .theia-editor-area {
+            margin-left: 310px;
+            margin-top: 30px;
+            margin-bottom: 22px;
+            min-height: calc(100vh - 52px);
+            background-color: #1e1e1e;
+            overflow-y: auto;
+            color: #cccccc;
+        }
+        .theia-top-panel {
+            height: 30px;
+            background-color: #3c3c3c;
+            color: #cccccc;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 9;
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+        }
+        .theia-status-bar {
+            height: 22px;
+            background-color: #007acc;
+            color: white;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 9;
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+            padding: 0 10px;
+        }
+        /* Custom scrollbar for Theia look */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e1e1e;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #555;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #666;
+        }
+        /* Project sections for dark theme */
+        .project-section {
+            background-color: #2d2d2d;
+            border: 1px solid #3e3e3e;
+        }
+        .project-active-badge {
+            background-color: rgba(0, 122, 204, 0.2);
+            color: #4dabf7;
+        }
+        .project-finished-badge {
+            background-color: rgba(35, 134, 54, 0.2);
+            color: #40c057;
+        }
+    </style>
+</head>
+<body class="bg-[#1e1e1e] text-gray-300 m-0 p-0">
+    <!-- Theia Top Menu Bar -->
+    <div class="theia-top-panel px-2">
+        <div class="flex space-x-4">
+            <span>File</span>
+            <span>Edit</span>
+            <span>View</span>
+            <span>Go</span>
+            <span>Run</span>
+            <span>Terminal</span>
+            <span>Help</span>
+        </div>
+    </div>
+
+    <!-- Theia Activity Bar (Left) -->
+    <div class="theia-activity-bar flex flex-col items-center pt-3">
+        <div class="theia-icon text-blue-500 bg-[#333333] rounded-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+            </svg>
+        </div>
+        <div class="theia-icon text-white">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+        </div>
+        <div class="theia-icon text-blue-500 bg-[#505050] rounded-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+            </svg>
+        </div>
+        <div class="theia-icon text-white">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+            </svg>
+        </div>
+    </div>
+
+    <!-- Theia Sidebar -->
+    <div class="theia-sidebar">
+        <div class="p-2 text-sm font-semibold flex justify-between items-center border-b border-gray-700">
+            <span>DCS PROJECT MANAGER</span>
+            <button class="text-gray-400 hover:text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                </svg>
+            </button>
+        </div>
+        <div class="p-2">
+            <div class="mb-2">
+                <div class="flex items-center justify-between text-sm mb-1">
+                    <span>PROJECTS</span>
+                    <div class="flex space-x-1">
+                        <button class="text-gray-400 hover:text-white">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                        </button>
+                        <button class="text-gray-400 hover:text-white">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="space-y-1 text-sm">
+                    <div class="flex items-center pl-2 py-1 hover:bg-[#2a2d2e] rounded">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        <span>All Projects</span>
+                    </div>
+                    <div class="flex items-center pl-2 py-1 text-blue-400 bg-[#37373d] rounded">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+                        </svg>
+                        <span>Genesis Translation Project</span>
+                    </div>
+                    <div class="flex items-center pl-2 py-1 hover:bg-[#2a2d2e] rounded">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        <span>Psalms Translation Project</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <div class="flex items-center justify-between text-sm mb-1">
+                    <span>PROJECT DETAILS</span>
+                </div>
+                <div class="space-y-1 text-sm">
+                    <div class="flex items-center pl-2 py-1 text-blue-400 bg-[#37373d] rounded">
+                        <span>Overview</span>
+                    </div>
+                    <div class="flex items-center pl-2 py-1 hover:bg-[#2a2d2e] rounded">
+                        <span>Milestones</span>
+                    </div>
+                    <div class="flex items-center pl-2 py-1 hover:bg-[#2a2d2e] rounded">
+                        <span>Tasks</span>
+                    </div>
+                    <div class="flex items-center pl-2 py-1 hover:bg-[#2a2d2e] rounded">
+                        <span>Repositories</span>
+                    </div>
+                    <div class="flex items-center pl-2 py-1 hover:bg-[#2a2d2e] rounded">
+                        <span>Settings</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Theia Editor Area (Main Content) -->
+    <div class="theia-editor-area px-6 py-4">
+        <!-- Project Header and Status -->
+        <div class="project-section rounded-lg p-6 mb-6">
+            <div class="flex flex-col lg:flex-row justify-between lg:items-center mb-6">
+                <div class="mb-4 lg:mb-0">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium project-active-badge mb-2">
+                        Active
+                    </span>
+                    <h1 class="text-2xl font-bold text-gray-200">Genesis Translation Project</h1>
+                    <p class="text-gray-400 mt-1">Biblical translation project for the book of Genesis with resources and references.</p>
+                </div>
+                <div class="flex flex-wrap gap-4">
+                    <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition flex items-center text-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
+                        Edit Project
+                    </button>
+                    <button class="bg-[#3c3c3c] text-gray-300 px-4 py-2 rounded hover:bg-[#4b4b4b] transition flex items-center text-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        Project Timeline
+                    </button>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Project Info -->
+                <div class="space-y-4">
+                    <div>
+                        <h3 class="text-sm font-medium text-gray-400">Project ID</h3>
+                        <p class="mt-1 text-sm text-gray-300">gen-translation-2023</p>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-medium text-gray-400">Primary Owner</h3>
+                        <div class="mt-1 flex items-center">
+                            <img src="https://ui-avatars.com/api/?name=J+D&background=0D8ABC&color=fff" class="w-6 h-6 rounded-full mr-2" alt="Owner">
+                            <span class="text-sm text-gray-300">John Doe</span>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-medium text-gray-400">Created On</h3>
+                        <p class="mt-1 text-sm text-gray-300">January 15, 2023</p>
+                    </div>
+                </div>
+                
+                <!-- Project Dates -->
+                <div class="space-y-4">
+                    <div>
+                        <h3 class="text-sm font-medium text-gray-400">Start Date</h3>
+                        <p class="mt-1 text-sm text-gray-300">January 15, 2023</p>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-medium text-gray-400">Estimated Completion</h3>
+                        <p class="mt-1 text-sm text-gray-300">August 30, 2023</p>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-medium text-gray-400">Last Updated</h3>
+                        <p class="mt-1 text-sm text-gray-300">March 17, 2023 (2 days ago)</p>
+                    </div>
+                </div>
+                
+                <!-- Project Progress -->
+                <div>
+                    <h3 class="text-sm font-medium text-gray-400 mb-2">Overall Progress</h3>
+                    <div class="mb-1 flex justify-between">
+                        <span class="text-xs text-gray-400">65% Complete</span>
+                        <span class="text-xs text-gray-400">35 days remaining</span>
+                    </div>
+                    <div class="w-full bg-[#3c3c3c] rounded-full h-2.5">
+                        <div class="bg-blue-600 h-2.5 rounded-full" style="width: 65%"></div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <div class="flex justify-between text-xs text-gray-400 mb-1">
+                            <span>Milestone Progress</span>
+                            <span>4/7 Complete</span>
+                        </div>
+                        <div class="w-full bg-[#3c3c3c] rounded-full h-2.5">
+                            <div class="bg-green-600 h-2.5 rounded-full" style="width: 57%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <div class="flex justify-between text-xs text-gray-400 mb-1">
+                            <span>Task Completion</span>
+                            <span>24/42 Complete</span>
+                        </div>
+                        <div class="w-full bg-[#3c3c3c] rounded-full h-2.5">
+                            <div class="bg-blue-500 h-2.5 rounded-full" style="width: 57%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Left Column -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Project Milestones -->
+                <div class="project-section rounded-lg shadow overflow-hidden">
+                    <div class="px-6 py-4 border-b border-[#3e3e3e] flex justify-between items-center">
+                        <h2 class="text-lg font-medium text-gray-200">Milestones</h2>
+                        <a href="milestone-management.html" class="text-sm font-medium text-blue-400 hover:text-blue-300 flex items-center">
+                            View All
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </a>
+                    </div>
+                    <div class="p-6">
+                        <div class="relative">
+                            <!-- Timeline Line -->
+                            <div class="absolute h-full w-0.5 bg-gray-600 left-0 top-0"></div>
+                            
+                            <!-- Milestone Items -->
+                            <div class="ml-8">
+                                <!-- Milestone 1 - Complete -->
+                                <div class="relative pb-8">
+                                    <div class="absolute -left-10 mt-1.5 w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
+                                        <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                        </svg>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <div>
+                                            <h3 class="text-base font-medium text-gray-200">Planning Phase</h3>
+                                            <p class="text-sm text-gray-400">Completed on Feb 01, 2023</p>
+                                        </div>
+                                        <span class="px-2 inline-flex items-center justify-center text-xs leading-5 font-semibold rounded-full bg-green-900 text-green-300">
+                                            Completed
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Milestone 2 - In Progress -->
+                                <div class="relative pb-8">
+                                    <div class="absolute -left-10 mt-1.5 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center animate-pulse">
+                                        <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <div>
+                                            <h3 class="text-base font-medium text-gray-200">Drafting Phase</h3>
+                                            <p class="text-sm text-gray-400">In progress (40% complete)</p>
+                                        </div>
+                                        <span class="px-2 inline-flex items-center justify-center text-xs leading-5 font-semibold rounded-full bg-blue-900 text-blue-300">
+                                            In Progress
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Milestone 3 - Not Started -->
+                                <div class="relative">
+                                    <div class="absolute -left-10 mt-1.5 w-5 h-5 rounded-full bg-gray-600 flex items-center justify-center">
+                                        <svg class="w-3 h-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <div>
+                                            <h3 class="text-base font-medium text-gray-200">Expert Review Phase</h3>
+                                            <p class="text-sm text-gray-400">Not started (blocked)</p>
+                                        </div>
+                                        <span class="px-2 inline-flex items-center justify-center text-xs leading-5 font-semibold rounded-full bg-gray-700 text-gray-300">
+                                            Not Started
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recent Activity -->
+                <div class="project-section rounded-lg shadow overflow-hidden">
+                    <div class="px-6 py-4 border-b border-[#3e3e3e]">
+                        <h2 class="text-lg font-medium text-gray-200">Recent Activity</h2>
+                    </div>
+                    <div class="p-6 space-y-6">
+                        <!-- Activity 1 -->
+                        <div class="flex">
+                            <img src="https://ui-avatars.com/api/?name=J+S&background=F59E0B&color=fff" class="w-10 h-10 rounded-full mr-4" alt="User">
+                            <div>
+                                <div class="flex items-center">
+                                    <h3 class="text-sm font-medium text-gray-200">Jane Smith</h3>
+                                    <span class="mx-2 text-gray-500">•</span>
+                                    <span class="text-sm text-gray-400">2 hours ago</span>
+                                </div>
+                                <p class="text-sm text-gray-400 mt-1">Completed task <span class="font-medium text-gray-300">Draft chapters 6-10</span> in the <span class="font-medium text-gray-300">Drafting Phase</span>.</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Activity 2 -->
+                        <div class="flex">
+                            <img src="https://ui-avatars.com/api/?name=J+D&background=0D8ABC&color=fff" class="w-10 h-10 rounded-full mr-4" alt="User">
+                            <div>
+                                <div class="flex items-center">
+                                    <h3 class="text-sm font-medium text-gray-200">John Doe</h3>
+                                    <span class="mx-2 text-gray-500">•</span>
+                                    <span class="text-sm text-gray-400">Yesterday</span>
+                                </div>
+                                <p class="text-sm text-gray-400 mt-1">Created a new task <span class="font-medium text-gray-300">Review drafted chapters</span> in the <span class="font-medium text-gray-300">Drafting Phase</span>.</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Activity 3 -->
+                        <div class="flex">
+                            <img src="https://ui-avatars.com/api/?name=R+J&background=8B5CF6&color=fff" class="w-10 h-10 rounded-full mr-4" alt="User">
+                            <div>
+                                <div class="flex items-center">
+                                    <h3 class="text-sm font-medium text-gray-200">Robert Johnson</h3>
+                                    <span class="mx-2 text-gray-500">•</span>
+                                    <span class="text-sm text-gray-400">2 days ago</span>
+                                </div>
+                                <p class="text-sm text-gray-400 mt-1">Started working on task <span class="font-medium text-gray-300">Draft chapters 11-15</span> in the <span class="font-medium text-gray-300">Drafting Phase</span>.</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Activity 4 -->
+                        <div class="flex">
+                            <img src="https://ui-avatars.com/api/?name=J+D&background=0D8ABC&color=fff" class="w-10 h-10 rounded-full mr-4" alt="User">
+                            <div>
+                                <div class="flex items-center">
+                                    <h3 class="text-sm font-medium text-gray-200">John Doe</h3>
+                                    <span class="mx-2 text-gray-500">•</span>
+                                    <span class="text-sm text-gray-400">4 days ago</span>
+                                </div>
+                                <p class="text-sm text-gray-400 mt-1">Updated project description and added new milestone <span class="font-medium text-gray-300">Community Testing Phase</span>.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Column -->
+            <div class="space-y-6">
+                <!-- Project Repositories -->
+                <div class="project-section rounded-lg shadow overflow-hidden">
+                    <div class="px-6 py-4 border-b border-[#3e3e3e] flex justify-between items-center">
+                        <h2 class="text-lg font-medium text-gray-200">Linked Repositories</h2>
+                        <button class="text-sm font-medium text-blue-400 hover:text-blue-300">Add Repo</button>
+                    </div>
+                    <div class="divide-y divide-gray-700">
+                        <!-- Repo 1 -->
+                        <div class="p-4">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <h3 class="text-sm font-medium text-gray-200">Door43-Catalog/en_gen</h3>
+                                    <p class="text-xs text-gray-400 mt-1">Main repository for Genesis translation</p>
+                                </div>
+                                <div class="flex">
+                                    <a href="#" class="text-gray-400 hover:text-blue-400 mx-1">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                        </svg>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="mt-2 flex items-center text-xs">
+                                <span class="flex items-center text-gray-400">
+                                    <svg class="flex-shrink-0 mr-1.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                    </svg>
+                                    12 issues
+                                </span>
+                                <span class="flex items-center text-gray-400 ml-4">
+                                    <svg class="flex-shrink-0 mr-1.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                    Last updated 2 days ago
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <!-- Repo 2 -->
+                        <div class="p-4">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <h3 class="text-sm font-medium text-gray-200">Door43-Catalog/en_gen_tq</h3>
+                                    <p class="text-xs text-gray-400 mt-1">Translation questions for Genesis</p>
+                                </div>
+                                <div class="flex">
+                                    <a href="#" class="text-gray-400 hover:text-blue-400 mx-1">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                        </svg>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="mt-2 flex items-center text-xs">
+                                <span class="flex items-center text-gray-400">
+                                    <svg class="flex-shrink-0 mr-1.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                    </svg>
+                                    7 issues
+                                </span>
+                                <span class="flex items-center text-gray-400 ml-4">
+                                    <svg class="flex-shrink-0 mr-1.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                    Last updated 5 days ago
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <!-- Repo 3 -->
+                        <div class="p-4">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <h3 class="text-sm font-medium text-gray-200">Door43-Catalog/en_gen_tn</h3>
+                                    <p class="text-xs text-gray-400 mt-1">Translation notes for Genesis</p>
+                                </div>
+                                <div class="flex">
+                                    <a href="#" class="text-gray-400 hover:text-blue-400 mx-1">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                        </svg>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="mt-2 flex items-center text-xs">
+                                <span class="flex items-center text-gray-400">
+                                    <svg class="flex-shrink-0 mr-1.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                    </svg>
+                                    5 issues
+                                </span>
+                                <span class="flex items-center text-gray-400 ml-4">
+                                    <svg class="flex-shrink-0 mr-1.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                    Last updated 1 week ago
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Team Members -->
+                <div class="project-section rounded-lg shadow overflow-hidden">
+                    <div class="px-6 py-4 border-b border-[#3e3e3e] flex justify-between items-center">
+                        <h2 class="text-lg font-medium text-gray-200">Team Members</h2>
+                        <button class="text-sm font-medium text-blue-400 hover:text-blue-300">Add Member</button>
+                    </div>
+                    <div class="divide-y divide-gray-700">
+                        <!-- Member 1 -->
+                        <div class="p-4 flex items-center justify-between">
+                            <div class="flex items-center">
+                                <img src="https://ui-avatars.com/api/?name=J+D&background=0D8ABC&color=fff" class="w-10 h-10 rounded-full mr-3" alt="Team Member">
+                                <div>
+                                    <h3 class="text-sm font-medium text-gray-200">John Doe</h3>
+                                    <p class="text-xs text-gray-400">Project Owner</p>
+                                </div>
+                            </div>
+                            <div class="text-gray-400 text-xs">
+                                8 tasks assigned
+                            </div>
+                        </div>
+                        
+                        <!-- Member 2 -->
+                        <div class="p-4 flex items-center justify-between">
+                            <div class="flex items-center">
+                                <img src="https://ui-avatars.com/api/?name=J+S&background=F59E0B&color=fff" class="w-10 h-10 rounded-full mr-3" alt="Team Member">
+                                <div>
+                                    <h3 class="text-sm font-medium text-gray-200">Jane Smith</h3>
+                                    <p class="text-xs text-gray-400">Translator</p>
+                                </div>
+                            </div>
+                            <div class="text-gray-400 text-xs">
+                                15 tasks assigned
+                            </div>
+                        </div>
+                        
+                        <!-- Member 3 -->
+                        <div class="p-4 flex items-center justify-between">
+                            <div class="flex items-center">
+                                <img src="https://ui-avatars.com/api/?name=R+J&background=8B5CF6&color=fff" class="w-10 h-10 rounded-full mr-3" alt="Team Member">
+                                <div>
+                                    <h3 class="text-sm font-medium text-gray-200">Robert Johnson</h3>
+                                    <p class="text-xs text-gray-400">Reviewer</p>
+                                </div>
+                            </div>
+                            <div class="text-gray-400 text-xs">
+                                12 tasks assigned
+                            </div>
+                        </div>
+                        
+                        <!-- Member 4 -->
+                        <div class="p-4 flex items-center justify-between">
+                            <div class="flex items-center">
+                                <img src="https://ui-avatars.com/api/?name=E+W&background=10B981&color=fff" class="w-10 h-10 rounded-full mr-3" alt="Team Member">
+                                <div>
+                                    <h3 class="text-sm font-medium text-gray-200">Emily Wilson</h3>
+                                    <p class="text-xs text-gray-400">Editor</p>
+                                </div>
+                            </div>
+                            <div class="text-gray-400 text-xs">
+                                7 tasks assigned
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Theia Status Bar -->
+    <div class="theia-status-bar">
+        <div class="flex-1 flex items-center">
+            <span class="mr-4">DCS: Connected</span>
+            <span>Project: Genesis Translation</span>
+        </div>
+        <div class="flex space-x-4">
+            <span>4 Tasks</span>
+            <span>2 PRs</span>
+            <span>7 Milestones</span>
+        </div>
+    </div>
+</body>
+</html> 

@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DCS Project Management - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Theia specific styles */
+        .theia-icon {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 8px;
+        }
+        .theia-activity-bar {
+            width: 50px;
+            background-color: #333333;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 10;
+        }
+        .theia-sidebar {
+            width: 260px;
+            background-color: #252526;
+            height: 100vh;
+            position: fixed;
+            left: 50px;
+            top: 30px;
+            z-index: 5;
+            color: #cccccc;
+            overflow-y: auto;
+            bottom: 22px;
+        }
+        .theia-editor-area {
+            margin-left: 310px;
+            margin-top: 30px;
+            margin-bottom: 22px;
+            min-height: calc(100vh - 52px);
+            background-color: #1e1e1e;
+            overflow-y: auto;
+            color: #cccccc;
+        }
+        .theia-top-panel {
+            height: 30px;
+            background-color: #3c3c3c;
+            color: #cccccc;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 9;
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+        }
+        .theia-status-bar {
+            height: 22px;
+            background-color: #007acc;
+            color: white;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 9;
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+            padding: 0 10px;
+        }
+        /* Custom scrollbar for Theia look */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e1e1e;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #555;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #666;
+        }
+        /* Project cards for dark theme */
+        .project-card {
+            background-color: #2d2d2d;
+            border: 1px solid #3e3e3e;
+        }
+        .project-active-header {
+            background-color: rgba(0, 122, 204, 0.2);
+            color: #4dabf7;
+        }
+        .project-finished-header {
+            background-color: rgba(35, 134, 54, 0.2);
+            color: #40c057;
+        }
+        .project-archived-header {
+            background-color: rgba(87, 87, 87, 0.2);
+            color: #adb5bd;
+        }
+    </style>
+</head>
+<body class="bg-[#1e1e1e] text-gray-300 m-0 p-0">
+    <!-- Theia Top Menu Bar -->
+    <div class="theia-top-panel px-2">
+        <div class="flex space-x-4">
+            <span>File</span>
+            <span>Edit</span>
+            <span>View</span>
+            <span>Go</span>
+            <span>Run</span>
+            <span>Terminal</span>
+            <span>Help</span>
+        </div>
+    </div>
+
+    <!-- Theia Activity Bar (Left) -->
+    <div class="theia-activity-bar flex flex-col items-center pt-3">
+        <div class="theia-icon text-blue-500 bg-[#333333] rounded-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+            </svg>
+        </div>
+        <div class="theia-icon text-white">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+        </div>
+        <div class="theia-icon text-blue-500 bg-[#505050] rounded-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+            </svg>
+        </div>
+        <div class="theia-icon text-white">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+            </svg>
+        </div>
+    </div>
+
+    <!-- Theia Sidebar -->
+    <div class="theia-sidebar">
+        <div class="p-2 text-sm font-semibold flex justify-between items-center border-b border-gray-700">
+            <span>DCS PROJECT MANAGER</span>
+            <button class="text-gray-400 hover:text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                </svg>
+            </button>
+        </div>
+        <div class="p-2">
+            <div class="mb-2">
+                <div class="flex items-center justify-between text-sm mb-1">
+                    <span>PROJECTS</span>
+                    <div class="flex space-x-1">
+                        <button class="text-gray-400 hover:text-white">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                        </button>
+                        <button class="text-gray-400 hover:text-white">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="space-y-1 text-sm">
+                    <div class="flex items-center pl-2 py-1 text-blue-400 bg-[#37373d] rounded">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        <span>All Projects</span>
+                    </div>
+                    <div class="flex items-center pl-2 py-1 hover:bg-[#2a2d2e] rounded">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        <span>Active</span>
+                    </div>
+                    <div class="flex items-center pl-2 py-1 hover:bg-[#2a2d2e] rounded">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        <span>Finished</span>
+                    </div>
+                    <div class="flex items-center pl-2 py-1 hover:bg-[#2a2d2e] rounded">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                        </svg>
+                        <span>Archived</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <div class="flex items-center justify-between text-sm mb-1">
+                    <span>RECENT PROJECTS</span>
+                </div>
+                <div class="space-y-1 text-sm">
+                    <div class="flex items-center pl-2 py-1 hover:bg-[#2a2d2e] rounded">
+                        <span>Genesis Translation Project</span>
+                    </div>
+                    <div class="flex items-center pl-2 py-1 hover:bg-[#2a2d2e] rounded">
+                        <span>Psalms Translation Project</span>
+                    </div>
+                    <div class="flex items-center pl-2 py-1 hover:bg-[#2a2d2e] rounded">
+                        <span>Ruth Translation Project</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Theia Editor Area (Main Content) -->
+    <div class="theia-editor-area px-6 py-4">
+        <!-- Page Title and Actions -->
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-bold text-gray-200">Projects</h2>
+            <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                New Project
+            </button>
+        </div>
+
+        <!-- Project Filters -->
+        <div class="bg-[#252526] rounded-lg shadow mb-6 p-4 border border-[#3e3e3e]">
+            <div class="flex flex-wrap items-center justify-between">
+                <div class="flex space-x-2">
+                    <button class="bg-blue-600 text-white px-3 py-1 rounded text-sm">All Projects</button>
+                    <button class="bg-[#3c3c3c] text-gray-300 px-3 py-1 rounded text-sm hover:bg-[#4b4b4b]">Active</button>
+                    <button class="bg-[#3c3c3c] text-gray-300 px-3 py-1 rounded text-sm hover:bg-[#4b4b4b]">Finished</button>
+                    <button class="bg-[#3c3c3c] text-gray-300 px-3 py-1 rounded text-sm hover:bg-[#4b4b4b]">Archived</button>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="text-sm text-gray-400">Sort by:</span>
+                    <select class="text-sm bg-[#3c3c3c] text-gray-300 border border-[#5a5a5a] rounded p-1">
+                        <option>Last Updated</option>
+                        <option>Name</option>
+                        <option>Progress</option>
+                        <option>Creation Date</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Projects List -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Project Card 1 - Active -->
+            <div class="project-card rounded-lg shadow overflow-hidden">
+                <div class="project-active-header px-4 py-2 border-b border-[#3e3e3e] flex justify-between items-center">
+                    <span class="font-medium">Active</span>
+                    <div class="flex space-x-2">
+                        <button class="text-gray-400 hover:text-blue-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            </svg>
+                        </button>
+                        <button class="text-gray-400 hover:text-blue-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-4">
+                    <h3 class="text-lg font-semibold text-gray-200 mb-2">Translation Project - Genesis</h3>
+                    <p class="text-sm text-gray-400 mb-4">Biblical translation project for the book of Genesis with resources and references.</p>
+                    
+                    <div class="mb-3">
+                        <div class="flex justify-between text-xs text-gray-400 mb-1">
+                            <span>Progress</span>
+                            <span>45%</span>
+                        </div>
+                        <div class="w-full bg-[#3c3c3c] rounded-full h-2">
+                            <div class="bg-blue-600 h-2 rounded-full" style="width: 45%"></div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between text-sm mb-3">
+                        <div>
+                            <span class="text-gray-400">Milestones:</span>
+                            <span class="font-medium ml-1 text-gray-300">8</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-400">Tasks:</span>
+                            <span class="font-medium ml-1 text-gray-300">24</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-400">Repos:</span>
+                            <span class="font-medium ml-1 text-gray-300">3</span>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center">
+                        <div class="flex -space-x-2">
+                            <img src="https://ui-avatars.com/api/?name=J+D&background=0D8ABC&color=fff" class="w-7 h-7 rounded-full border-2 border-[#2d2d2d]" alt="Team Member">
+                            <img src="https://ui-avatars.com/api/?name=A+B&background=4ADE80&color=fff" class="w-7 h-7 rounded-full border-2 border-[#2d2d2d]" alt="Team Member">
+                            <img src="https://ui-avatars.com/api/?name=C+D&background=F43F5E&color=fff" class="w-7 h-7 rounded-full border-2 border-[#2d2d2d]" alt="Team Member">
+                        </div>
+                        <span class="text-xs text-gray-400">Updated 2 days ago</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Project Card 2 - Active -->
+            <div class="project-card rounded-lg shadow overflow-hidden">
+                <div class="project-active-header px-4 py-2 border-b border-[#3e3e3e] flex justify-between items-center">
+                    <span class="font-medium">Active</span>
+                    <div class="flex space-x-2">
+                        <button class="text-gray-400 hover:text-blue-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            </svg>
+                        </button>
+                        <button class="text-gray-400 hover:text-blue-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-4">
+                    <h3 class="text-lg font-semibold text-gray-200 mb-2">Translation Project - Psalms</h3>
+                    <p class="text-sm text-gray-400 mb-4">Biblical translation project for the book of Psalms with poetic analysis.</p>
+                    
+                    <div class="mb-3">
+                        <div class="flex justify-between text-xs text-gray-400 mb-1">
+                            <span>Progress</span>
+                            <span>68%</span>
+                        </div>
+                        <div class="w-full bg-[#3c3c3c] rounded-full h-2">
+                            <div class="bg-blue-600 h-2 rounded-full" style="width: 68%"></div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between text-sm mb-3">
+                        <div>
+                            <span class="text-gray-400">Milestones:</span>
+                            <span class="font-medium ml-1 text-gray-300">5</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-400">Tasks:</span>
+                            <span class="font-medium ml-1 text-gray-300">37</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-400">Repos:</span>
+                            <span class="font-medium ml-1 text-gray-300">4</span>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center">
+                        <div class="flex -space-x-2">
+                            <img src="https://ui-avatars.com/api/?name=P+S&background=F59E0B&color=fff" class="w-7 h-7 rounded-full border-2 border-[#2d2d2d]" alt="Team Member">
+                            <img src="https://ui-avatars.com/api/?name=R+T&background=8B5CF6&color=fff" class="w-7 h-7 rounded-full border-2 border-[#2d2d2d]" alt="Team Member">
+                        </div>
+                        <span class="text-xs text-gray-400">Updated 1 day ago</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Project Card 3 - Finished -->
+            <div class="project-card rounded-lg shadow overflow-hidden">
+                <div class="project-finished-header px-4 py-2 border-b border-[#3e3e3e] flex justify-between items-center">
+                    <span class="font-medium">Finished</span>
+                    <div class="flex space-x-2">
+                        <button class="text-gray-400 hover:text-blue-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            </svg>
+                        </button>
+                        <button class="text-gray-400 hover:text-blue-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-4">
+                    <h3 class="text-lg font-semibold text-gray-200 mb-2">Translation Project - Ruth</h3>
+                    <p class="text-sm text-gray-400 mb-4">Biblical translation project for the book of Ruth completed with all resources.</p>
+                    
+                    <div class="mb-3">
+                        <div class="flex justify-between text-xs text-gray-400 mb-1">
+                            <span>Progress</span>
+                            <span>100%</span>
+                        </div>
+                        <div class="w-full bg-[#3c3c3c] rounded-full h-2">
+                            <div class="bg-green-600 h-2 rounded-full" style="width: 100%"></div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between text-sm mb-3">
+                        <div>
+                            <span class="text-gray-400">Milestones:</span>
+                            <span class="font-medium ml-1 text-gray-300">8</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-400">Tasks:</span>
+                            <span class="font-medium ml-1 text-gray-300">32</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-400">Repos:</span>
+                            <span class="font-medium ml-1 text-gray-300">3</span>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center">
+                        <div class="flex -space-x-2">
+                            <img src="https://ui-avatars.com/api/?name=J+D&background=0D8ABC&color=fff" class="w-7 h-7 rounded-full border-2 border-[#2d2d2d]" alt="Team Member">
+                            <img src="https://ui-avatars.com/api/?name=K+L&background=EC4899&color=fff" class="w-7 h-7 rounded-full border-2 border-[#2d2d2d]" alt="Team Member">
+                            <img src="https://ui-avatars.com/api/?name=M+N&background=10B981&color=fff" class="w-7 h-7 rounded-full border-2 border-[#2d2d2d]" alt="Team Member">
+                        </div>
+                        <span class="text-xs text-gray-400">Completed 2 weeks ago</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Theia Status Bar -->
+    <div class="theia-status-bar">
+        <div class="flex justify-between w-full">
+            <div class="flex space-x-4">
+                <span>DCS Project Manager v0.1.0</span>
+                <span>|</span>
+                <span>Active Projects: 2</span>
+                <span>|</span>
+                <span>Finished Projects: 1</span>
+            </div>
+            <div class="flex space-x-4">
+                <span>Door43 User: John Doe</span>
+                <span>|</span>
+                <span>Notifications: 3</span>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 
