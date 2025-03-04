@@ -13,7 +13,7 @@ export async function createOrgRepo(repoName: string, orgName: string, token: st
     })
   })
   const data = await response.json()
-  console.log({data});
+  console.log({ data });
   return data
 }
 

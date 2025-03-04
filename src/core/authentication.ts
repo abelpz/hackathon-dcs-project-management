@@ -1,4 +1,4 @@
-export async function getToken(username: string, password: string): Promise<string> { 
+export async function getToken(username: string, password: string): Promise<string> {
   const response = await fetch(`https://qa.door43.org/api/v1/users/${username}/tokens`, {
     method: 'POST',
     headers: {
@@ -12,4 +12,3 @@ export async function getToken(username: string, password: string): Promise<stri
   return data.sha1
 }
 
-  

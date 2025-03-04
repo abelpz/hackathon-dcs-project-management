@@ -11,7 +11,7 @@ describe('Authentication', () => {
 
   it('should get token successfully', async () => {
     const token = await getToken("testuser", "testpass");
-    console.log({token});
+    console.log({ token });
     expect(token).toBeDefined();
   });
 
