@@ -95,6 +95,17 @@ type ProjectData = {
   repos: string[];
 }
 
+export type ProjectSummary = {
+  name: string;
+  status: string;
+  folder: string;
+}
+
+export type ProjectList = {
+  projects: ProjectSummary[];
+  lastUpdated: string;
+}
+
 // Utility Functions
 const getFormattedJsonString = (object: object) => {
   return JSON.stringify(object, null, 2);
@@ -248,6 +259,61 @@ export async function checkProjectExists(projectName: string): Promise<boolean> 
   return false;
 }
 
+export async function getProjects(): Promise<ProjectList> {
+  const projectFolders = ['active', 'completed', 'archived'];
+  const projects: ProjectSummary[] = [];
+
+  for (const folder of projectFolders) {
+    const response = await fetch(`https://qa.door43.org/api/v1/repos/${PROJECTS_REPO_ORG}/${PROJECTS_REPO_NAME}/contents/projects/${folder}`);
+    if (response.ok) {
+      const files = await response.json() as FileContentResponse[];
+      for (const file of files) {
+        if (file.name.endsWith('.json') && file.name !== 'project-list.json') {
+          try {
+            const projectResponse = await fetch(file.download_url);
+            if (projectResponse.ok) {
+              const projectData = await projectResponse.json() as ProjectData;
+              projects.push({
+                name: projectData.name,
+                status: projectData.status,
+                folder: folder
+              });
+            }
+          } catch (error) {
+            console.error(`Error reading project file ${file.name}:`, error);
+          }
+        }
+      }
+    }
+  }
+
+  const projectList: ProjectList = {
+    projects,
+    lastUpdated: new Date().toISOString()
+  };
+
+  return projectList;
+}
+
+async function updateProjectList(token: string): Promise<FileContentResponse> {
+  const projectList = await getProjects();
+  const projectListContent = getFormattedJsonString(projectList);
+
+  try {
+    // Try to get existing project list file
+    const response = await fetch(`https://qa.door43.org/api/v1/repos/${PROJECTS_REPO_ORG}/${PROJECTS_REPO_NAME}/contents/projects/project-list.json`);
+    if (response.ok) {
+      const existingFile = await response.json() as FileContentResponse;
+      return await updateFileInRepo(PROJECTS_REPO_NAME, PROJECTS_REPO_ORG, token, 'projects/project-list.json', projectListContent, existingFile.sha);
+    } else {
+      return await createFileInRepo(PROJECTS_REPO_NAME, PROJECTS_REPO_ORG, token, 'projects/project-list.json', projectListContent);
+    }
+  } catch (error) {
+    console.error('Error updating project list:', error);
+    throw error;
+  }
+}
+
 export async function createProject(token: string, projectData: ProjectData): Promise<FileContentResponse> {
   const projectBody = getFormattedJsonString(projectData);
 
@@ -261,7 +327,9 @@ export async function createProject(token: string, projectData: ProjectData): Pr
   }
 
   const validName = projectData.name.replace(/[^a-zA-Z0-9]/g, '-');
-  return await createFileInRepo(PROJECTS_REPO_NAME, PROJECTS_REPO_ORG, token, `projects/active/${validName}.json`, projectBody);
+  const result = await createFileInRepo(PROJECTS_REPO_NAME, PROJECTS_REPO_ORG, token, `projects/active/${validName}.json`, projectBody);
+  await updateProjectList(token);
+  return result;
 }
 
 export async function getProject(projectName: string): Promise<{ data: FileContentResponse; path: string }> {
@@ -282,7 +350,9 @@ export async function getProject(projectName: string): Promise<{ data: FileConte
 export async function updateProject(token: string, projectName: string, projectData: ProjectData): Promise<FileContentResponse> {
   const projectBody = getFormattedJsonString(projectData);
   const {data: project, path} = await getProject(projectName);
-  return await updateFileInRepo(PROJECTS_REPO_NAME, PROJECTS_REPO_ORG, token, path, projectBody, project.sha);
+  const result = await updateFileInRepo(PROJECTS_REPO_NAME, PROJECTS_REPO_ORG, token, path, projectBody, project.sha);
+  await updateProjectList(token);
+  return result;
 }
 
 export async function archiveProject(token: string, projectName: string): Promise<FileContentResponse> {
@@ -293,5 +363,7 @@ export async function archiveProject(token: string, projectName: string): Promis
   await deleteFileInRepo(PROJECTS_REPO_NAME, project.sha, PROJECTS_REPO_ORG, token, path);
 
   // Then, create the project in the archived folder
-  return await createFileInRepo(PROJECTS_REPO_NAME, PROJECTS_REPO_ORG, token, `projects/archived/${projectName}.json`, projectBody);
+  const result = await createFileInRepo(PROJECTS_REPO_NAME, PROJECTS_REPO_ORG, token, `projects/archived/${projectName}.json`, projectBody);
+  await updateProjectList(token);
+  return result;
 }
