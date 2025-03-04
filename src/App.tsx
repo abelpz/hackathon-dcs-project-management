@@ -1,5 +1,5 @@
 import { getToken } from './core/authentication'
-import { createTask } from './core/createTask'
+import { createTask } from './core/task'
 
 import './App.css'
 import { useRef, useState } from 'react';

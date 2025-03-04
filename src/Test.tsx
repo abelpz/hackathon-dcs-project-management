@@ -1,6 +1,6 @@
 import React from 'react'
 import { createOrgRepo } from './core/projects'
-import { assignTask } from './core/assignTask'
+import { assignTask } from './core/task'
 
 export default function Test({ token }: { token: string }) {
   return (
