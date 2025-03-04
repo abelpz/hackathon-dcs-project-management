@@ -367,3 +367,34 @@ export async function archiveProject(token: string, projectName: string): Promis
   await updateProjectList(token);
   return result;
 }
+
+export async function deleteAllProjects(token: string): Promise<void> {
+  const projectFolders = ['active', 'completed', 'archived'];
+  
+  for (const folder of projectFolders) {
+    const response = await fetch(`https://qa.door43.org/api/v1/repos/${PROJECTS_REPO_ORG}/${PROJECTS_REPO_NAME}/contents/projects/${folder}`);
+    if (response.ok) {
+      const files = await response.json() as FileContentResponse[];
+      for (const file of files) {
+        if (file.name.endsWith('.json') && file.name !== 'project-list.json') {
+          try {
+            await deleteFileInRepo(PROJECTS_REPO_NAME, file.sha, PROJECTS_REPO_ORG, token, `projects/${folder}/${file.name}`);
+          } catch (error) {
+            console.error(`Error deleting project file ${file.name}:`, error);
+          }
+        }
+      }
+    }
+  }
+
+  // Also delete the project-list.json if it exists
+  try {
+    const listResponse = await fetch(`https://qa.door43.org/api/v1/repos/${PROJECTS_REPO_ORG}/${PROJECTS_REPO_NAME}/contents/projects/project-list.json`);
+    if (listResponse.ok) {
+      const listFile = await listResponse.json() as FileContentResponse;
+      await deleteFileInRepo(PROJECTS_REPO_NAME, listFile.sha, PROJECTS_REPO_ORG, token, 'projects/project-list.json');
+    }
+  } catch (error) {
+    console.error('Error deleting project list:', error);
+  }
+}
