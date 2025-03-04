@@ -12,6 +12,7 @@ Funciones:
 - UpdateProject(ProjectData: ProjectData, token: string): Actualiza un proyecto del repositorio relacional.
 - ArchiveProject(ProjectId: string, token: string): Mueve un proyecto al archivo.
 
+gilberto
 - CreateTask(TaskData: TaskData, ParentMilestoneId: string, token: string): Crea una tarea en el repositorio indicado.
 - ReadTask(TaskId: string, token: string): Lee una tarea del repositorio indicado.
 - UpdateTask(TaskData: TaskData, token: string): Actualiza una tarea del repositorio indicado.
