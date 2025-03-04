@@ -17,6 +17,49 @@
  */
 
 import { PROJECTS_REPO_ORG, PROJECTS_REPO_NAME } from "./constants";
+import { createMilestone, updateMilestone, closeMilestone } from "./milestone";
+import { Issue, getAllMilestoneIssues, createIssue, CreateIssueOptions, updateIssue } from './issues';
+
+// Resource Types
+export type ResourceType = 'organization' | 'project' | 'milestone' | 'task';
+
+export interface Resource {
+  id: string;
+  type: ResourceType;
+  name: string;
+}
+
+export interface OrganizationResource extends Resource {
+  type: 'organization';
+}
+
+export interface ProjectResource extends Resource {
+  type: 'project';
+  organizationResourceId: string;
+}
+
+export interface MilestoneResource extends Resource {
+  type: 'milestone';
+  projectResourceId: string;
+}
+
+export interface TaskResource extends Resource {
+  type: 'task';
+  milestoneResourceId: string;
+}
+
+// Resource Validation Functions
+function validateProjectResources(projectResources: string[], organizationResources: string[]): boolean {
+  return projectResources.every(resource => organizationResources.includes(resource));
+}
+
+function validateMilestoneResources(milestoneResources: string[], projectResources: string[]): boolean {
+  return milestoneResources.every(resource => projectResources.includes(resource));
+}
+
+function validateTaskResource(taskResource: string, milestoneResources: string[]): boolean {
+  return milestoneResources.includes(taskResource);
+}
 
 // DCS API Types
 interface User {
@@ -80,9 +123,31 @@ interface ErrorResponse {
 }
 
 // Project Types
+type DCSMilestoneMapping = {
+  repoName: string;
+  milestoneId: string;
+};
+
 type ProjectMilestone = {
+  id?: string;  // Optional for creation, will be generated
   name: string;
-  repos: string[];
+  description?: string;
+  startDate?: string;
+  targetDate?: string;
+  status: 'open' | 'closed';
+  resources: string[];  // List of resources this milestone is associated with
+  dcsMapping?: DCSMilestoneMapping[];
+}
+
+type ProcessedProjectMilestone = {
+  id: string;
+  name: string;
+  description?: string;
+  startDate?: string;
+  targetDate?: string;
+  status: 'open' | 'closed';
+  resources: string[];
+  dcsMapping: DCSMilestoneMapping[];
 }
 
 type ProjectData = {
@@ -92,7 +157,11 @@ type ProjectData = {
   endDate: string;
   status: string;
   milestones: ProjectMilestone[];
-  repos: string[];
+  resources: string[];  // List of resources associated with this project
+}
+
+type ProcessedProjectData = Omit<ProjectData, 'milestones'> & {
+  milestones: ProcessedProjectMilestone[];
 }
 
 export type ProjectSummary = {
@@ -315,21 +384,91 @@ async function updateProjectList(token: string): Promise<FileContentResponse> {
 }
 
 export async function createProject(token: string, projectData: ProjectData): Promise<FileContentResponse> {
-  const projectBody = getFormattedJsonString(projectData);
+  // Validate project resources
+  const organizationResources = await getOrganizationResources(token);
+  if (!validateProjectResources(projectData.resources, organizationResources)) {
+    throw new Error('Project resources must be a subset of organization resources');
+  }
+
+  // Process the milestones to add IDs and create DCS mappings
+  const processedMilestones: ProcessedProjectMilestone[] = [];
+  
+  for (const milestone of projectData.milestones) {
+    // Validate milestone resources
+    if (!validateMilestoneResources(milestone.resources, projectData.resources)) {
+      throw new Error(`Milestone ${milestone.name} resources must be a subset of project resources`);
+    }
+
+    const newMilestone: ProcessedProjectMilestone = {
+      ...milestone,
+      id: `milestone-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      status: 'open',
+      dcsMapping: []
+    };
+
+    // Create the milestone in each associated repository
+    for (const repoName of milestone.resources) {
+      try {
+        const dcsResponse = await createMilestone(
+          PROJECTS_REPO_ORG,
+          repoName,
+          milestone.name,
+          token
+        );
+
+        // Add the mapping to the milestone
+        newMilestone.dcsMapping.push({
+          repoName,
+          milestoneId: dcsResponse.id.toString()
+        });
+      } catch (error) {
+        console.error(`Failed to create milestone in repo ${repoName}:`, error);
+        // Continue with other repos even if one fails
+      }
+    }
+
+    processedMilestones.push(newMilestone);
+  }
+
+  // Update the project data with processed milestones
+  const processedProjectData = {
+    ...projectData,
+    milestones: processedMilestones
+  };
+
+  const projectBody = getFormattedJsonString(processedProjectData);
 
   const projectsFolderExists = await checkProjectsRepoExists();
   if (!projectsFolderExists) {
     await createProjectsRepo(token);
   }
-  const projectExists = await checkProjectExists(projectData.name);
+  const projectExists = await checkProjectExists(processedProjectData.name);
   if (projectExists) {
-    throw new Error(`Project ${projectData.name} already exists`);
+    throw new Error(`Project ${processedProjectData.name} already exists`);
   }
 
-  const validName = projectData.name.replace(/[^a-zA-Z0-9]/g, '-');
+  const validName = processedProjectData.name.replace(/[^a-zA-Z0-9]/g, '-');
   const result = await createFileInRepo(PROJECTS_REPO_NAME, PROJECTS_REPO_ORG, token, `projects/active/${validName}.json`, projectBody);
   await updateProjectList(token);
   return result;
+}
+
+// Function to get organization resources
+async function getOrganizationResources(token: string): Promise<string[]> {
+  // For now, we'll get all repositories in the organization as resources
+  const response = await fetch(`https://qa.door43.org/api/v1/orgs/${PROJECTS_REPO_ORG}/repos`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Accept': 'application/json'
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch organization resources');
+  }
+
+  const repos = await response.json() as Repository[];
+  return repos.map(repo => repo.name);
 }
 
 export async function getProject(projectName: string): Promise<{ data: FileContentResponse; path: string }> {
@@ -398,3 +537,407 @@ export async function deleteAllProjects(token: string): Promise<void> {
     console.error('Error deleting project list:', error);
   }
 }
+
+// Milestone Management Functions
+export async function addMilestoneToProject(
+  token: string,
+  projectName: string,
+  milestone: Omit<ProjectMilestone, 'id' | 'dcsMapping'>
+): Promise<FileContentResponse> {
+  // Get the current project
+  const { data: projectFile, path } = await getProject(projectName);
+  const projectData = JSON.parse(atob(projectFile.content)) as ProcessedProjectData;
+
+  // Create a new milestone with a unique ID
+  const newMilestone: ProcessedProjectMilestone = {
+    ...milestone,
+    id: `milestone-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    status: 'open',
+    dcsMapping: []
+  };
+
+  // Create the milestone in each associated repository
+  for (const repoName of milestone.resources) {
+    try {
+      const dcsResponse = await createMilestone(
+        PROJECTS_REPO_ORG,
+        repoName,
+        milestone.name,
+        token
+      );
+
+      // Add the mapping to the milestone
+      newMilestone.dcsMapping.push({
+        repoName,
+        milestoneId: dcsResponse.id.toString()
+      });
+    } catch (error) {
+      console.error(`Failed to create milestone in repo ${repoName}:`, error);
+      // Continue with other repos even if one fails
+    }
+  }
+
+  // Add the milestone to the project
+  projectData.milestones.push(newMilestone);
+
+  // Update the project file
+  const result = await updateFileInRepo(
+    PROJECTS_REPO_NAME,
+    PROJECTS_REPO_ORG,
+    token,
+    path,
+    getFormattedJsonString(projectData),
+    projectFile.sha
+  );
+
+  await updateProjectList(token);
+  return result;
+}
+
+export async function updateProjectMilestone(
+  token: string,
+  projectName: string,
+  milestoneId: string,
+  updates: Partial<Omit<ProjectMilestone, 'id' | 'dcsMapping'>>
+): Promise<FileContentResponse> {
+  // Get the current project
+  const { data: projectFile, path } = await getProject(projectName);
+  const projectData = JSON.parse(atob(projectFile.content)) as ProcessedProjectData;
+
+  // Find the milestone
+  const milestoneIndex = projectData.milestones.findIndex(m => m.id === milestoneId);
+  if (milestoneIndex === -1) {
+    throw new Error(`Milestone ${milestoneId} not found in project ${projectName}`);
+  }
+
+  const milestone = projectData.milestones[milestoneIndex];
+
+  // Update the milestone in DCS for each repository
+  for (const mapping of milestone.dcsMapping) {
+    try {
+      await updateMilestone(
+        PROJECTS_REPO_ORG,
+        mapping.repoName,
+        token,
+        mapping.milestoneId,
+        updates.name || milestone.name
+      );
+    } catch (error) {
+      console.error(`Failed to update milestone in repo ${mapping.repoName}:`, error);
+      // Continue with other repos even if one fails
+    }
+  }
+
+  // Update the milestone in our project
+  projectData.milestones[milestoneIndex] = {
+    ...milestone,
+    ...updates,
+    dcsMapping: milestone.dcsMapping
+  };
+
+  // Update the project file
+  const result = await updateFileInRepo(
+    PROJECTS_REPO_NAME,
+    PROJECTS_REPO_ORG,
+    token,
+    path,
+    getFormattedJsonString(projectData),
+    projectFile.sha
+  );
+
+  await updateProjectList(token);
+  return result;
+}
+
+export async function closeProjectMilestone(
+  token: string,
+  projectName: string,
+  milestoneId: string
+): Promise<FileContentResponse> {
+  // Get the current project
+  const { data: projectFile, path } = await getProject(projectName);
+  const projectData = JSON.parse(atob(projectFile.content)) as ProcessedProjectData;
+
+  // Find the milestone
+  const milestoneIndex = projectData.milestones.findIndex(m => m.id === milestoneId);
+  if (milestoneIndex === -1) {
+    throw new Error(`Milestone ${milestoneId} not found in project ${projectName}`);
+  }
+
+  const milestone = projectData.milestones[milestoneIndex];
+
+  // Close the milestone in DCS for each repository
+  for (const mapping of milestone.dcsMapping) {
+    try {
+      await closeMilestone(
+        PROJECTS_REPO_ORG,
+        mapping.repoName,
+        token,
+        mapping.milestoneId
+      );
+    } catch (error) {
+      console.error(`Failed to close milestone in repo ${mapping.repoName}:`, error);
+      // Continue with other repos even if one fails
+    }
+  }
+
+  // Update the milestone status in our project
+  projectData.milestones[milestoneIndex] = {
+    ...milestone,
+    status: 'closed'
+  };
+
+  // Update the project file
+  const result = await updateFileInRepo(
+    PROJECTS_REPO_NAME,
+    PROJECTS_REPO_ORG,
+    token,
+    path,
+    getFormattedJsonString(projectData),
+    projectFile.sha
+  );
+
+  await updateProjectList(token);
+  return result;
+}
+
+export interface ProjectTask extends Omit<Issue, 'body'> {
+  repository: string;
+  description?: string;  // renamed from body to be more task-oriented
+}
+
+export interface ProjectMilestoneTasksResult {
+  total_count: number;
+  open_count: number;
+  closed_count: number;
+  tasks: ProjectTask[];
+  fetched_at: string;
+  milestone_version: string;
+  inconsistent_repos?: string[];
+}
+
+// Utility function to create a hash from a string using Web Crypto API
+async function createHash(data: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const dataBuffer = encoder.encode(data);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+export async function getProjectMilestoneTasks(
+  projectName: string,
+  milestoneId: string,
+  token: string
+): Promise<ProjectMilestoneTasksResult> {
+  // Get the project milestone
+  const { data: projectFile } = await getProject(projectName);
+  const projectData = JSON.parse(atob(projectFile.content)) as ProcessedProjectData;
+  
+  const milestone = projectData.milestones.find(m => m.id === milestoneId);
+  if (!milestone) {
+    throw new Error(`Milestone ${milestoneId} not found in project ${projectName}`);
+  }
+
+  const inconsistentRepos: string[] = [];
+  const allTasks: ProjectTask[] = [];
+  
+  // Fetch tasks from all mapped DCS milestones in parallel with rate limiting
+  const batchSize = 3; // Adjust based on API limits
+  for (let i = 0; i < milestone.dcsMapping.length; i += batchSize) {
+    const batch = milestone.dcsMapping.slice(i, i + batchSize);
+    
+    const batchPromises = batch.map(async (mapping) => {
+      try {
+        const issues = await getAllMilestoneIssues(
+          PROJECTS_REPO_ORG,
+          mapping.repoName,
+          mapping.milestoneId,
+          token
+        );
+        
+        // Transform issues to tasks with repository context
+        return issues.map(issue => ({
+          ...issue,
+          repository: mapping.repoName,
+          description: issue.body
+        }));
+      } catch (error) {
+        console.error(`Error fetching tasks for ${mapping.repoName}:`, error);
+        inconsistentRepos.push(mapping.repoName);
+        return [];
+      }
+    });
+    
+    const batchResults = await Promise.all(batchPromises);
+    allTasks.push(...batchResults.flat());
+    
+    // Rate limiting pause between batches
+    if (i + batchSize < milestone.dcsMapping.length) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+  }
+
+  // Calculate counts
+  const openCount = allTasks.filter(t => t.state === 'open').length;
+  const closedCount = allTasks.filter(t => t.state === 'closed').length;
+  
+  // Calculate milestone version for cache invalidation
+  const milestoneVersion = await createHash(JSON.stringify(milestone.dcsMapping));
+
+  return {
+    total_count: allTasks.length,
+    open_count: openCount,
+    closed_count: closedCount,
+    tasks: allTasks,
+    fetched_at: new Date().toISOString(),
+    milestone_version: milestoneVersion,
+    ...(inconsistentRepos.length && { inconsistent_repos: inconsistentRepos })
+  };
+}
+
+export interface CreateProjectTaskOptions {
+  title: string;
+  description?: string;
+  assignees?: string[];
+  labels?: string[];
+  due_date?: string;
+}
+
+export async function createProjectMilestoneTask(
+  token: string,
+  projectName: string,
+  milestoneId: string,
+  repoName: string,
+  options: CreateProjectTaskOptions
+): Promise<ProjectTask> {
+  // Get the project milestone
+  const { data: projectFile } = await getProject(projectName);
+  const projectData = JSON.parse(atob(projectFile.content)) as ProcessedProjectData;
+  
+  const milestone = projectData.milestones.find(m => m.id === milestoneId);
+  if (!milestone) {
+    throw new Error(`Milestone ${milestoneId} not found in project ${projectName}`);
+  }
+
+  // Find the DCS milestone mapping for the specified repository
+  const dcsMapping = milestone.dcsMapping.find(m => m.repoName === repoName);
+  if (!dcsMapping) {
+    throw new Error(`Milestone is not mapped to repository ${repoName}`);
+  }
+
+  // Transform our domain task options to DCS issue options
+  const issueOptions: CreateIssueOptions = {
+    title: options.title,
+    body: options.description,
+    assignees: options.assignees,
+    labels: options.labels,
+    due_date: options.due_date,
+    milestone: parseInt(dcsMapping.milestoneId)
+  };
+
+  // Create the issue in DCS through the issues adapter layer
+  const issue = await createIssue(
+    PROJECTS_REPO_ORG,
+    repoName,
+    issueOptions,
+    token
+  );
+
+  // Transform the DCS issue into our domain ProjectTask
+  return {
+    ...issue,
+    repository: repoName,
+    description: issue.body
+  };
+}
+
+export async function updateProjectTaskStatus(
+  token: string,
+  repoName: string,
+  taskNumber: number,
+  newStatus: 'open' | 'closed'
+): Promise<ProjectTask> {
+  // Update the issue in DCS through the issues adapter layer
+  const issue = await updateIssue(
+    PROJECTS_REPO_ORG,
+    repoName,
+    taskNumber,
+    { state: newStatus },
+    token
+  );
+
+  // Transform the DCS issue into our domain ProjectTask
+  return {
+    ...issue,
+    repository: repoName,
+    description: issue.body
+  };
+}
+
+export async function createProjectTask(
+  token: string,
+  projectName: string,
+  milestoneId: string,
+  taskResource: string,
+  taskData: {
+    title: string;
+    description?: string;
+    assignees?: string[];
+  }
+): Promise<ProjectTask> {
+  // Get the current project
+  const { data: projectFile } = await getProject(projectName);
+  const projectData = JSON.parse(atob(projectFile.content)) as ProcessedProjectData;
+
+  // Find the milestone
+  const milestone = projectData.milestones.find(m => m.id === milestoneId);
+  if (!milestone) {
+    throw new Error(`Milestone ${milestoneId} not found in project ${projectName}`);
+  }
+
+  // Validate that the task resource is available to the milestone
+  if (!validateTaskResource(taskResource, milestone.resources)) {
+    throw new Error(`Task resource ${taskResource} must be available to the milestone`);
+  }
+
+  // Create the task in DCS
+  const mapping = milestone.dcsMapping.find(m => m.repoName === taskResource);
+  if (!mapping) {
+    throw new Error(`No DCS mapping found for resource ${taskResource} in milestone ${milestone.name}`);
+  }
+
+  const issue = await createIssue(
+    PROJECTS_REPO_ORG,
+    taskResource,
+    {
+      title: taskData.title,
+      body: taskData.description || '',
+      milestone: parseInt(mapping.milestoneId),
+      assignees: taskData.assignees || []
+    },
+    token
+  );
+
+  // Convert the issue to a ProjectTask
+  const task: ProjectTask = {
+    ...issue,
+    repository: taskResource,
+    description: issue.body
+  };
+
+  return task;
+}
+
+export async function deleteProject(token: string, projectName: string): Promise<void> {
+  const { data: project, path } = await getProject(projectName);
+  await deleteFileInRepo(PROJECTS_REPO_NAME, project.sha, PROJECTS_REPO_ORG, token, path);
+  await updateProjectList(token);
+}
+
+export type { 
+  ProjectData,
+  ProcessedProjectData,
+  ProjectMilestone,
+  ProcessedProjectMilestone
+};
