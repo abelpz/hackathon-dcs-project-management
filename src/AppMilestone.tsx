@@ -20,7 +20,7 @@ export default function AppMilestone({ token }: { token: string }) {
 
     return (
         <>
-            <p>nombre de la organizacion</p>
+            <label>nombre de la organizacion</label>
             <input type="text" ref={orgRef} />
             <br />
             <p>nombre del repositorio</p>
