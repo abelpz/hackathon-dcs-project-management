@@ -2,17 +2,20 @@ import { getToken } from './core/authentication'
 import { createTask } from './core/task'
 
 import './App.css'
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import Test from './Test';
+import AppPrototype from './AppPrototype';
 import ProjectsTest from './ProjectsTest';
+import DropdownMenu from './DropdownMenu';
 
-
+export type AppState = "home" | "projects" | "milestones" | "issues";
 
 function App() {
   const userNameRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
   const [token, setToken] = useState<string | null>(window.localStorage.getItem("token"));
+  const [ appState, setAppState ] = useState<AppState>("home");
 
 
   return (
@@ -36,8 +39,9 @@ function App() {
       </>
     ) : (
       <>
+        <DropdownMenu appState={appState} setAppState={setAppState}/>
         <Test token={token} />
-        <ProjectsTest token={token} />
+        <AppPrototype token={token} appState={appState} />
       </>
     )}
 
