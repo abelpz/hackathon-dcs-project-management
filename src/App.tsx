@@ -3,6 +3,7 @@ import { getToken } from './core/authentication'
 import './App.css'
 import { useRef, useState } from 'react';
 import Test from './Test';
+import AppPrototype from './AppPrototype';
 
 
 function App() {
@@ -33,6 +34,7 @@ function App() {
     ) : (
       <>
         <Test token={token} />
+        <AppPrototype token={token} />
       </>
     )}
     </>
