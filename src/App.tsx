@@ -1,9 +1,13 @@
 import { getToken } from './core/authentication'
+import { createTask } from './core/task'
 
 import './App.css'
 import { useRef, useState } from 'react';
+
 import Test from './Test';
 import AppPrototype from './AppPrototype';
+import ProjectsTest from './ProjectsTest';
+
 
 
 function App() {
@@ -23,20 +27,22 @@ function App() {
         <input type="password" ref={passwordRef} />
         <br />
         <button onClick={() => {
-        if (userNameRef.current?.value && passwordRef.current?.value) {
-          getToken(userNameRef.current?.value, passwordRef.current?.value).then((token) => {
-            setToken(token);
-            window.localStorage.setItem("token", token);
-          })
-        }
-      }}>Login</button>
+          if (userNameRef.current?.value && passwordRef.current?.value) {
+            getToken(userNameRef.current?.value, passwordRef.current?.value).then((token) => {
+              setToken(token);
+              window.localStorage.setItem("token", token);
+            })
+          }
+        }}>Login</button>
       </>
     ) : (
       <>
         <Test token={token} />
         <AppPrototype token={token} />
+        <ProjectsTest token={token} />
       </>
     )}
+
     </>
   )
 }

@@ -16,7 +16,7 @@ describe('Projects', () => {
     });
 
     const result = await createOrgRepo('test-repo', 'test-org', 'test-token');
-    
+
     expect(result).toEqual(mockResponse);
     expect(global.fetch).toHaveBeenCalledWith(
       'https://git.door43.org/api/v1/orgs/test-org/repos',
