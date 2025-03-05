@@ -7,6 +7,8 @@ import { useEffect, useRef, useState } from 'react';
 import Test from './Test';
 import AppPrototype from './AppPrototype';
 import ProjectsTest from './ProjectsTest';
+import AppMilestone from './AppMilestone';
+import AppIssues from './AppIssues';
 import DropdownMenu from './DropdownMenu';
 
 export type AppState = "home" | "projects" | "milestones" | "issues";
@@ -15,7 +17,7 @@ function App() {
   const userNameRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
   const [token, setToken] = useState<string | null>(window.localStorage.getItem("token"));
-  const [ appState, setAppState ] = useState<AppState>("home");
+  const [appState, setAppState] = useState<AppState>("home");
 
 
   return (
@@ -39,7 +41,7 @@ function App() {
       </>
     ) : (
       <>
-        <DropdownMenu appState={appState} setAppState={setAppState}/>
+        <DropdownMenu appState={appState} setAppState={setAppState} />
         <Test token={token} />
         <AppPrototype token={token} appState={appState} />
       </>
