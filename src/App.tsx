@@ -7,6 +7,7 @@ import { useRef, useState } from 'react';
 import Test from './Test';
 import ProjectsTest from './ProjectsTest';
 import AppMilestone from './AppMilestone';
+import AppIssues from './AppIssues';
 
 
 
@@ -39,7 +40,8 @@ function App() {
       <>
 
         <ProjectsTest token={token} />
-        <AppMilestone token={token} />
+        {/* <AppMilestone token={token} /> */}
+        <AppIssues token={token} />
 
       </>
     )}
