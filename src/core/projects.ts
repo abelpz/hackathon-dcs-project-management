@@ -128,7 +128,7 @@ type DCSMilestoneMapping = {
   milestoneId: string;
 };
 
-type ProjectMilestone = {
+export type ProjectMilestone = {
   id?: string;  // Optional for creation, will be generated
   name: string;
   description?: string;
@@ -202,7 +202,7 @@ export async function createFileInRepo(repoName: string, orgName: string, token:
   const encodedContent = btoa(content);
   const response = await fetch(`https://qa.door43.org/api/v1/repos/${orgName}/${repoName}/contents/${path}`, {
     method: 'POST',
-    headers: { 
+    headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
       'Authorization': `Bearer ${token}`
@@ -259,14 +259,14 @@ export async function createRepoInOrg(repoName: string, orgName: string, token: 
       name: repoName
     })
   });
-  
+
   if (!response.ok) {
     const errorData = await response.json();
     throw new Error((errorData as ErrorResponse).message || `Failed to create repository: ${response.status}`);
   }
-  
+
   const data = await response.json();
-  console.log({data});
+  console.log({ data });
   return data as Repository;
 }
 
@@ -298,7 +298,7 @@ export async function createProjectsFolder(token: string): Promise<FileContentRe
 export async function createProjectsRepo(token: string): Promise<Repository> {
   try {
     const repoResponse = await createRepoInOrg(PROJECTS_REPO_NAME, PROJECTS_REPO_ORG, token);
-    
+
     if (repoResponse && repoResponse.id) {
       // Successfully created repository, now create the projects folder
       await createProjectsFolder(token);
@@ -392,7 +392,7 @@ export async function createProject(token: string, projectData: ProjectData): Pr
 
   // Process the milestones to add IDs and create DCS mappings
   const processedMilestones: ProcessedProjectMilestone[] = [];
-  
+
   for (const milestone of projectData.milestones) {
     // Validate milestone resources
     if (!validateMilestoneResources(milestone.resources, projectData.resources)) {
@@ -488,14 +488,14 @@ export async function getProject(projectName: string): Promise<{ data: FileConte
 
 export async function updateProject(token: string, projectName: string, projectData: ProjectData): Promise<FileContentResponse> {
   const projectBody = getFormattedJsonString(projectData);
-  const {data: project, path} = await getProject(projectName);
+  const { data: project, path } = await getProject(projectName);
   const result = await updateFileInRepo(PROJECTS_REPO_NAME, PROJECTS_REPO_ORG, token, path, projectBody, project.sha);
   await updateProjectList(token);
   return result;
 }
 
 export async function archiveProject(token: string, projectName: string): Promise<FileContentResponse> {
-  const {data: project, path} = await getProject(projectName);
+  const { data: project, path } = await getProject(projectName);
   const projectBody = atob(project.content);
 
   // First, delete the project from the active folder
@@ -509,7 +509,7 @@ export async function archiveProject(token: string, projectName: string): Promis
 
 export async function deleteAllProjects(token: string): Promise<void> {
   const projectFolders = ['active', 'completed', 'archived'];
-  
+
   for (const folder of projectFolders) {
     const response = await fetch(`https://qa.door43.org/api/v1/repos/${PROJECTS_REPO_ORG}/${PROJECTS_REPO_NAME}/contents/projects/${folder}`);
     if (response.ok) {
@@ -733,7 +733,7 @@ export async function getProjectMilestoneTasks(
   // Get the project milestone
   const { data: projectFile } = await getProject(projectName);
   const projectData = JSON.parse(atob(projectFile.content)) as ProcessedProjectData;
-  
+
   const milestone = projectData.milestones.find(m => m.id === milestoneId);
   if (!milestone) {
     throw new Error(`Milestone ${milestoneId} not found in project ${projectName}`);
@@ -741,12 +741,12 @@ export async function getProjectMilestoneTasks(
 
   const inconsistentRepos: string[] = [];
   const allTasks: ProjectTask[] = [];
-  
+
   // Fetch tasks from all mapped DCS milestones in parallel with rate limiting
   const batchSize = 3; // Adjust based on API limits
   for (let i = 0; i < milestone.dcsMapping.length; i += batchSize) {
     const batch = milestone.dcsMapping.slice(i, i + batchSize);
-    
+
     const batchPromises = batch.map(async (mapping) => {
       try {
         const issues = await getAllMilestoneIssues(
@@ -755,7 +755,7 @@ export async function getProjectMilestoneTasks(
           mapping.milestoneId,
           token
         );
-        
+
         // Transform issues to tasks with repository context
         return issues.map(issue => ({
           ...issue,
@@ -768,10 +768,10 @@ export async function getProjectMilestoneTasks(
         return [];
       }
     });
-    
+
     const batchResults = await Promise.all(batchPromises);
     allTasks.push(...batchResults.flat());
-    
+
     // Rate limiting pause between batches
     if (i + batchSize < milestone.dcsMapping.length) {
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -781,7 +781,7 @@ export async function getProjectMilestoneTasks(
   // Calculate counts
   const openCount = allTasks.filter(t => t.state === 'open').length;
   const closedCount = allTasks.filter(t => t.state === 'closed').length;
-  
+
   // Calculate milestone version for cache invalidation
   const milestoneVersion = await createHash(JSON.stringify(milestone.dcsMapping));
 
@@ -814,7 +814,7 @@ export async function createProjectMilestoneTask(
   // Get the project milestone
   const { data: projectFile } = await getProject(projectName);
   const projectData = JSON.parse(atob(projectFile.content)) as ProcessedProjectData;
-  
+
   const milestone = projectData.milestones.find(m => m.id === milestoneId);
   if (!milestone) {
     throw new Error(`Milestone ${milestoneId} not found in project ${projectName}`);
@@ -935,7 +935,7 @@ export async function deleteProject(token: string, projectName: string): Promise
   await updateProjectList(token);
 }
 
-export type { 
+export type {
   ProjectData,
   ProcessedProjectData,
   ProjectMilestone,
