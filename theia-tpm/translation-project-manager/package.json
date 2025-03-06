@@ -3,33 +3,27 @@
   "keywords": [
     "theia-extension"
   ],
-  "version": "0.0.0",
+  "version": "0.1.0",
   "files": [
     "lib",
     "src"
   ],
   "dependencies": {
-    "@theia/core": "1.59.0"
+    "@theia/core": "latest"
   },
   "devDependencies": {
-    "rimraf": "^5.0.0",
-    "typescript": "~5.4.5",
-    "@testing-library/react": "^11.2.7",
-    "@types/jest": "^26.0.20",
-    "jest": "^26.6.3",
-    "ts-node": "^10.9.1",
-    "ts-jest": "^26.5.6"
+    "rimraf": "latest",
+    "typescript": "latest"
   },
   "scripts": {
     "prepare": "yarn run clean && yarn run build",
     "clean": "rimraf lib",
     "build": "tsc",
-    "watch": "tsc -w",
-    "test": "jest --config configs/jest.config.ts"
+    "watch": "tsc -w"
   },
   "theiaExtensions": [
     {
-      "frontend": "lib/browser/translation-project-manager-frontend-module"
+      "frontend": "lib/browser/project-manager-frontend-module"
     }
   ]
 }

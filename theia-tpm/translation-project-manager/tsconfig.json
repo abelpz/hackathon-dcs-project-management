@@ -1,26 +1,25 @@
 {
     "compilerOptions": {
-        "skipLibCheck": true,
-        "declaration": true,
-        "declarationMap": true,
+        "strict": true,
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
         "noImplicitAny": true,
-        "noEmitOnError": false,
+        "noEmitOnError": true,
         "noImplicitThis": true,
         "noUnusedLocals": true,
         "strictNullChecks": true,
-        "experimentalDecorators": true,
-        "emitDecoratorMetadata": true,
-        "downlevelIteration": true,
-        "resolveJsonModule": true,
+        "strictPropertyInitialization": false,
+        "sourceMap": true,
+        "declaration": true,
+        "skipLibCheck": true,
+        "jsx": "react",
         "module": "commonjs",
         "moduleResolution": "node",
         "target": "ES2017",
-        "jsx": "react",
         "lib": [
             "ES2017",
-            "dom"
+            "DOM"
         ],
-        "sourceMap": true,
         "rootDir": "src",
         "outDir": "lib"
     },
