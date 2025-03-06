@@ -1,8 +1,8 @@
 import { BaseWidget, Message } from '@theia/core/lib/browser';
-import { injectable, inject, postConstruct } from 'inversify';
+import { injectable, inject } from 'inversify';
 import { MessageService } from '@theia/core';
-import { ProjectManager } from '../../core/project-manager/ProjectManager';
-import { DCSStorageService } from '../../core/project-manager/storage/DCSStorageService';
+import { ProjectManager } from './project-manager/ProjectManager';
+import { DCSStorageService } from './project-manager/storage/DCSStorageService';
 
 interface Organization {
     id: number;

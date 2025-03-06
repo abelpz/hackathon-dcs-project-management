@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useProjectManager } from '../contexts/ProjectManagerContext';
-import type { Milestone } from '../../core/project-manager/models';
+import type { Milestone } from '../../../theia-tpm/translation-project-manager/src/browser/project-manager/models';
 
 interface CreateTaskModalProps {
   isOpen: boolean;

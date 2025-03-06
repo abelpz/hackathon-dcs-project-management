@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useProjectManager } from '../contexts/ProjectManagerContext';
 import { Header } from './Header';
 import { CreateTaskModal } from './CreateTaskModal';
-import type { Milestone, Task } from '../../core/project-manager/models';
+import type { Milestone, Task } from '../../../theia-tpm/translation-project-manager/src/browser/project-manager/models';
 
 interface MilestoneDetailsProps {
   milestoneId: string;

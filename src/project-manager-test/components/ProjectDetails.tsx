@@ -3,7 +3,7 @@ import { useProjectManager } from '../contexts/ProjectManagerContext';
 import { Header } from './Header';
 import { CreateMilestoneModal } from './CreateMilestoneModal';
 import { MilestoneDetails } from './MilestoneDetails';
-import type { Project, Milestone } from '../../core/project-manager/models';
+import type { Project, Milestone } from '../../../theia-tpm/translation-project-manager/src/browser/project-manager/models';
 
 interface ProjectDetailsProps {
   projectId: string;

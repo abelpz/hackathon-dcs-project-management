@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useProjectManager } from '../contexts/ProjectManagerContext';
 import { useNavigation } from '../contexts/NavigationContext';
 import { Header } from './Header';
-import type { Project } from '../../core/project-manager/models';
+import type { Project } from '../../../theia-tpm/translation-project-manager/src/browser/project-manager/models';
 
 export function ProjectsList() {
   const { projectManager } = useProjectManager();

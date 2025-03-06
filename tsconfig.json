@@ -24,6 +24,6 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true
   },
-  "include": ["src"],
+  "include": ["src", "theia-tpm/translation-project-manager/src/browser/project-manager"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

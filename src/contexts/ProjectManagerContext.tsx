@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { ProjectManager } from '../core/project-manager/ProjectManager';
-import { DCSStorageService } from '../core/project-manager/storage/DCSStorageService';
+import { ProjectManager } from '../../theia-tpm/translation-project-manager/src/browser/project-manager/ProjectManager';
+import { DCSStorageService } from '../../theia-tpm/translation-project-manager/src/browser/project-manager/storage/DCSStorageService';
 
 interface ProjectManagerContextType {
   projectManager: ProjectManager | null;
