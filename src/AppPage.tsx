@@ -10,6 +10,7 @@ import Link from './components/Link'
 import FilterSection from './components/layouts/FilterSection'
 import AppContainer from './components/layouts/AppContainer'
 import MainSection from "./components/layouts/MainSection"
+import TitleBar from "./components/TitleBar"
 
 
 const AppPage = () => {
@@ -17,6 +18,7 @@ const AppPage = () => {
         <AppContainer>
             <SideBar />
             <MainSection>
+                <TitleBar />
                 <FilterSection></FilterSection>
                 <CardsSection>
                     <MyCardActive />

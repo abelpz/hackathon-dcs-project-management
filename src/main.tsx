@@ -8,7 +8,7 @@ import AppPage from './AppPage.tsx'
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     {/* <App /> */}
-    <AppPage />
+    {/* <AppPage /> */}
     <AppComponents />
   </React.StrictMode>,
 )
