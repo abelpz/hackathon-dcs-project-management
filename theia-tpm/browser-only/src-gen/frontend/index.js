@@ -100,7 +100,7 @@ module.exports = (async () => {
         await load(container, import('@theia/monaco/lib/browser/monaco-frontend-module'));
         await load(container, import('@theia/userstorage/lib/browser/user-storage-frontend-module'));
         await load(container, import('@theia/preferences/lib/browser/preference-frontend-module'));
-        await load(container, import('translation-project-manager/lib/browser/translation-project-manager-frontend-module'));
+        await load(container, import('translation-project-manager/lib/browser/project-manager-frontend-module'));
         
         MonacoInit.init(container);
         ;

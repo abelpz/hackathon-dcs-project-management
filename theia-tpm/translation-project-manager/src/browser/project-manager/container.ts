@@ -1,10 +1,10 @@
 import { Container } from 'inversify';
 import { TYPES } from './types';
 import { ProjectManager } from './ProjectManager';
-import { RxDBStorageService } from './storage/RxDBStorageService';
+// import { RxDBStorageService } from './storage/RxDBStorageService';
 import { UserManager } from './UserManager';
 import { OrganizationManager } from './OrganizationManager';
-import type { IStorageService, ProjectManagerConfig } from './types';
+import type { ProjectManagerConfig } from './types';
 
 const container = new Container();
 
@@ -16,7 +16,7 @@ const defaultConfig: ProjectManagerConfig = {
 };
 
 // Bind services and managers in singleton scope
-container.bind<IStorageService>(TYPES.StorageService).to(RxDBStorageService).inSingletonScope();
+// container.bind<IStorageService>(TYPES.StorageService).to(RxDBStorageService).inSingletonScope();
 container.bind<ProjectManager>(TYPES.ProjectManager).to(ProjectManager).inSingletonScope();
 container.bind<UserManager>(TYPES.UserManager).to(UserManager).inSingletonScope();
 container.bind<OrganizationManager>(TYPES.OrganizationManager).to(OrganizationManager).inSingletonScope();

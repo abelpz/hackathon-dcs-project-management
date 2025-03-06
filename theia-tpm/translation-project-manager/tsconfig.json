@@ -9,6 +9,7 @@
         "noUnusedLocals": true,
         "strictNullChecks": true,
         "strictPropertyInitialization": false,
+        "useDefineForClassFields": false,
         "sourceMap": true,
         "declaration": true,
         "skipLibCheck": true,
@@ -21,7 +22,9 @@
             "DOM"
         ],
         "rootDir": "src",
-        "outDir": "lib"
+        "outDir": "lib",
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true
     },
     "include": [
         "src"

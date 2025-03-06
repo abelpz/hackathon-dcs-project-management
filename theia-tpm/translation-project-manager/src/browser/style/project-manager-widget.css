@@ -19,7 +19,9 @@
     margin-bottom: 5px;
 }
 
-.project-manager-widget .form-group input {
+.project-manager-widget .form-group input,
+.project-manager-widget .form-group textarea,
+.project-manager-widget .form-group select {
     width: 100%;
     padding: 8px;
 }
@@ -78,7 +80,7 @@
     height: 100%;
 }
 
-.project-manager-widget .header {
+.project-manager-widget .project-list-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -117,6 +119,61 @@
 .project-manager-widget .project-status.inactive {
     background-color: var(--theia-errorBackground);
     color: var(--theia-error-foreground);
+}
+
+.project-manager-widget .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.project-manager-widget .modal-content {
+    background-color: var(--theia-editor-background);
+    border: 1px solid var(--theia-editorWidget-border);
+    border-radius: 4px;
+    padding: 20px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.project-manager-widget .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.project-manager-widget .close-button {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--theia-editor-foreground);
+}
+
+.project-manager-widget .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.project-manager-widget .error-message {
+    color: var(--theia-errorForeground);
+    margin: 10px 0;
+    padding: 10px;
+    border: 1px solid var(--theia-errorBorder);
+    border-radius: 4px;
+    background-color: var(--theia-errorBackground);
 }
 
 @keyframes spin {
