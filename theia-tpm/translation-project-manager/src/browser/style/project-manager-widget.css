@@ -4,6 +4,43 @@
     overflow-y: auto;
 }
 
+.project-manager-widget .main-screen {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.project-manager-widget .screen-header {
+    padding: 10px 0;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--theia-editorWidget-border);
+}
+
+.project-manager-widget .screen-content {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.project-manager-widget .details-info {
+    background-color: var(--theia-editor-background);
+    border: 1px solid var(--theia-editorWidget-border);
+    border-radius: 4px;
+    padding: 15px;
+    margin: 15px 0;
+}
+
+.project-manager-widget .details-info p {
+    margin: 5px 0;
+    color: var(--theia-descriptionForeground);
+}
+
+.project-manager-widget .placeholder-message {
+    text-align: center;
+    padding: 20px;
+    color: var(--theia-descriptionForeground);
+    font-style: italic;
+}
+
 .project-manager-widget .login-container {
     max-width: 400px;
     margin: 0 auto;
@@ -87,6 +124,12 @@
     margin-bottom: 20px;
 }
 
+.project-manager-widget .header-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
 .project-manager-widget .projects-list {
     display: grid;
     gap: 10px;
@@ -97,6 +140,12 @@
     background-color: var(--theia-editor-background);
     border: 1px solid var(--theia-editorWidget-border);
     border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.project-manager-widget .project-item:hover {
+    background-color: var(--theia-list-hoverBackground);
 }
 
 .project-manager-widget .project-name {
@@ -174,6 +223,24 @@
     border: 1px solid var(--theia-errorBorder);
     border-radius: 4px;
     background-color: var(--theia-errorBackground);
+}
+
+.project-manager-widget .details-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--theia-editorWidget-border);
+}
+
+.project-manager-widget .details-header h3 {
+    margin: 0;
+}
+
+.project-manager-widget .details-header button {
+    padding: 5px 10px;
+    font-size: 0.9em;
 }
 
 @keyframes spin {

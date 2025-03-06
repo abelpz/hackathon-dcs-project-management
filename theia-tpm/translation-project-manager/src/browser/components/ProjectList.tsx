@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useProjectManager } from '../contexts/ProjectManagerContext';
+import { useNavigation } from '../contexts/NavigationContext';
 import { CreateProjectModal } from './CreateProjectModal';
 
 interface Project {
@@ -9,7 +10,8 @@ interface Project {
 }
 
 export const ProjectList: React.FC = () => {
-    const { projectManager } = useProjectManager();
+    const { projectManager, logout } = useProjectManager();
+    const { navigate } = useNavigation();
     const [projects, setProjects] = useState<Project[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -39,6 +41,10 @@ export const ProjectList: React.FC = () => {
         loadProjects();
     }, [projectManager]);
 
+    const handleProjectClick = (projectId: string) => {
+        navigate({ type: 'project-details', projectId });
+    };
+
     if (isLoading) {
         return (
             <div className="loading-indicator">
@@ -54,12 +60,17 @@ export const ProjectList: React.FC = () => {
     return (
         <div className="project-manager-content">
             <div className="project-list-header">
-                <h3>My Projects</h3>
-                <button 
-                    className="theia-button main" 
-                    onClick={() => setShowCreateModal(true)}
-                >
-                    Create Project
+                <div className="header-left">
+                    <h3>Projects</h3>
+                    <button 
+                        className="theia-button main" 
+                        onClick={() => setShowCreateModal(true)}
+                    >
+                        Create Project
+                    </button>
+                </div>
+                <button className="theia-button secondary" onClick={logout}>
+                    Logout
                 </button>
             </div>
             
@@ -68,7 +79,11 @@ export const ProjectList: React.FC = () => {
             ) : (
                 <div className="projects-list">
                     {projects.map(project => (
-                        <div key={project.id} className="project-item">
+                        <div 
+                            key={project.id} 
+                            className="project-item"
+                            onClick={() => handleProjectClick(project.id)}
+                        >
                             <div className="project-name">{project.name}</div>
                             <div className={`project-status ${project.status}`}>
                                 {project.status}
