@@ -6,9 +6,13 @@ import DashBoard from './components/prototype/DashBoard'
 import { Button } from './components/btn'
 import MyCardActive from './components/cardActive'
 import MyCardFinished from './components/cardFinished'
-import CardsSection from './components/CardsSection'
+import CardsSection from './components/layouts/CardsSection'
 import SideBar from './components/layouts/Sidebar'
 import Input from './components/Input'
+import NavBar from './components/layouts/NavBar'
+import Link from './components/Link'
+import FilterSection from './components/layouts/FilterSection'
+import AppContainer from './components/layouts/AppContainer'
 
 export default function AppComonents() {
     const [active, setActive] = useState<JSX.Element | null>(null)
@@ -37,6 +41,18 @@ export default function AppComonents() {
     const mostrarInput = () => {
         setActive(<Input />)
     }
+    const mostrarNavBar = () => {
+        setActive(<NavBar />)
+    }
+    const mostrarLink = () => {
+        setActive(<Link />)
+    }
+    const mostrarFilter = () => {
+        setActive(<FilterSection />)
+    }
+    const mostrarAppContainer = () => {
+        setActive(<AppContainer />)
+    }
 
 
     return (<>
@@ -48,6 +64,10 @@ export default function AppComonents() {
         <Button label='Cards-section' onClick={mostrarCardSection} />
         <Button label='Side-Bar' onClick={mostrarSideBar} />
         <Button label='Input' onClick={mostrarInput} />
+        <Button label='Nav-Bar' onClick={mostrarNavBar} />
+        <Button label='Link' onClick={mostrarLink} />
+        <Button label='Filter-Section' onClick={mostrarFilter} />
+        <Button label='Container' onClick={mostrarAppContainer} />
         <div>
             {active}
         </div>
