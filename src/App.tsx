@@ -2,11 +2,10 @@ import { getToken } from './core/authentication'
 import './App.css'
 import { useEffect, useRef, useState } from 'react';
 
-import Test from './Test';
 import AppPrototype from './AppPrototype';
 import DropdownMenu from './DropdownMenu';
 
-export type AppState = "home" | "projects" | "milestones" | "issues";
+export type AppState = "home" | "projects" | "milestones" | "issues" | "test";
 
 function App() {
   const userNameRef = useRef<HTMLInputElement>(null);
@@ -35,8 +34,7 @@ function App() {
       </>
     ) : (
       <>
-        <DropdownMenu appState={appState} setAppState={setAppState} />
-        <Test token={token} />
+        <DropdownMenu setAppState={setAppState} />
         <AppPrototype token={token} appState={appState} />
       </>
     )}

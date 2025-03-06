@@ -36,6 +36,7 @@ export default function createProjectPage({ token }: { token: string }) {
   return (
         <>
             <h1>Proyectos</h1>
+            <br />
             <label>Nombre project</label>
             <br />
             <input type="text" ref={projectNameRef} />

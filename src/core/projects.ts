@@ -150,7 +150,7 @@ type DCSMilestoneMapping = {
   milestoneId: string;
 };
 
-export type ProjectMilestone = {
+type ProjectMilestone = {
   id?: string;  // Optional for creation, will be generated
   name: string;
   description?: string;
