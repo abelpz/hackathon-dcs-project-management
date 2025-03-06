@@ -1,0 +1,33 @@
+{
+  "private": true,
+  "name": "browser-only",
+  "version": "0.0.0",
+  "dependencies": {
+    "@theia/core": "1.59.0",
+    "@theia/messages": "1.59.0",
+    "@theia/preferences": "1.59.0",
+    "translation-project-manager": "*"
+  },
+  "devDependencies": {
+    "@theia/cli": "1.59.0"
+  },
+  "scripts": {
+    "rebuild": "theia rebuild:browser --cacheRoot ..",
+    "bundle": "yarn rebuild && theia build --mode development",
+    "start": "theia start",
+    "clean": "theia clean",
+    "watch": "yarn rebuild && theia build --watch --mode development"
+  },
+  "theia": {
+    "target": "browser-only",
+    "frontend": {
+      "config": {
+        "applicationName": "Passage Recorder",
+        "preferences": {
+          "files.enableTrash": false,
+          "workbench.statusBar.visible": false
+        }
+      }
+    }
+  }
+}
