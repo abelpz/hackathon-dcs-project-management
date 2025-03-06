@@ -24,7 +24,8 @@
     "rxdb": "^16.8.0",
     "rxjs": "^7.8.1",
     "tailwindcss": "^4.0.10",
-    "uuid": "^11.1.0"
+    "uuid": "^11.1.0",
+    "react-multi-select-component": "^4.3.4"
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",
