@@ -1,6 +1,4 @@
 import { getToken } from './core/authentication'
-import { createTask } from './core/task'
-
 import './App.css'
 import { useEffect, useRef, useState } from 'react';
 
@@ -14,7 +12,6 @@ function App() {
   const passwordRef = useRef<HTMLInputElement>(null);
   const [token, setToken] = useState<string | null>(window.localStorage.getItem("token"));
   const [appState, setAppState] = useState<AppState>("home");
-
 
   return (
     <>{!token ? (
@@ -41,7 +38,6 @@ function App() {
         <AppPrototype token={token} appState={appState} />
       </>
     )}
-
     </>
   )
 }
