@@ -1,19 +1,13 @@
 import { getToken } from './core/authentication'
-import { createTask } from './core/task'
-
 import './App.css'
 import { useRef, useState } from 'react';
-
 import Test from './Test';
 import ProjectsTest from './ProjectsTest';
-
-
 
 function App() {
   const userNameRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
   const [token, setToken] = useState<string | null>(window.localStorage.getItem("token"));
-
 
   return (
     <>{!token ? (
@@ -40,7 +34,6 @@ function App() {
         <ProjectsTest token={token} />
       </>
     )}
-
     </>
   )
 }

@@ -12,8 +12,19 @@
     "test:watch": "jest --watch"
   },
   "dependencies": {
+    "@tailwindcss/vite": "^4.0.10",
+    "@types/axios": "^0.14.4",
+    "@types/uuid": "^10.0.0",
+    "axios": "^1.8.1",
+    "dexie": "^3.2.6",
+    "inversify": "^7.0.1",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "reflect-metadata": "^0.2.2",
+    "rxdb": "^16.8.0",
+    "rxjs": "^7.8.1",
+    "tailwindcss": "^4.0.10",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",
