@@ -25,7 +25,7 @@ export default function ProjectItem({ selectedProject, setSelectedMilestone, pro
       <br />
       <ul>{selectedProject &&
         selectedProject.milestones.map((data, i) =>
-          <button onClick={() => { setProjectState("viewMilestone"); setSelectedMilestone(data); setMilestoneIndex(i) }}> <li key={i}>{`${data.name}`}</li></button>)
+          <button key={i} onClick={() => { setProjectState("viewMilestone"); setSelectedMilestone(data); setMilestoneIndex(i) }}> <li key={i}>{`${data.name}`}</li></button>)
       }
       </ul>
       <ul>{selectedProject.resources.map((data, i) => <li key={i}>{data}</li>)}</ul>

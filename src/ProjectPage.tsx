@@ -33,7 +33,7 @@ export default function ProjectPage({ token }: { token: string }) {
     const [selectedProject, setSelectedProject] = useState<SelectedProject>();
     const [selectedMilestone, setSelectedMilestone] = useState<ProjectMilestone>();
     const [projectState, setProjectState] = useState<ProjectState>("list");
-    const [prevProjectState, setPrevProjectState] = useState<Array<ProjectState>>([]);
+    const [prevProjectState, setPrevProjectState] = useState<Array<ProjectState>>(["list"]);
 
     const [projectIndex, setProjectIndex] = useState<number>();
     const [projectItemId, setProjectItemId] = useState<number>(0);
@@ -59,27 +59,22 @@ export default function ProjectPage({ token }: { token: string }) {
 
     const setCurrentState = (state: ProjectState) => {
 
-        let tempState:ProjectState = "list";
+        setPrevProjectState((prevProjectState) => [...prevProjectState, state])
 
-        if (prevProjectState) {
+        if (prevProjectState ) {
             const newState = [...prevProjectState, state]
-            setPrevProjectState(newState)
-            tempState = newState[newState.length -1]
-        }
-        if (tempState){
+            const tempState = newState[newState.length -1]
             setProjectState(tempState)
         }
     };
 
     const setPrevState = () => {
         if (prevProjectState){
-        const newState = prevProjectState
-        setProjectState(newState[newState.length -1])
-    }
+            const newState = prevProjectState.slice(0, -1)
+            setPrevProjectState(newState)
+            setProjectState(newState[newState.length -1])
+        }
     };
-
-
-    console.log(prevProjectState);
 
     return (
         <>
@@ -87,7 +82,7 @@ export default function ProjectPage({ token }: { token: string }) {
 
             {projectState === "list" && <button onClick={() => { setCurrentState("create") }}>New Project</button>}
             
-            {projectState === "list" && <ul>{projects?.projects.map((data, id) => <button onClick={() => { setCurrentState("viewProject"); setProjectIndex(id) }}><li key={id}>{`${data.name}`}</li></button>)}</ul>}
+            {projectState === "list" && <ul>{projects?.projects.map((data, id) => <button key={id} onClick={() => { setCurrentState("viewProject"); setProjectIndex(id) }}><li key={id}>{`${data.name}`}</li></button>)}</ul>}
 
             {projectState === "create" && <CreateProjectPage token={token} />}
 
