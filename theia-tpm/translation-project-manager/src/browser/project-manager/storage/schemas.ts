@@ -1,4 +1,4 @@
-import { RxJsonSchema } from 'rxdb';
+/* import { RxJsonSchema } from 'rxdb';
 import type { Organization, Project, Milestone, Task, Resource, User, Team } from '../models';
 
 export const userSchema: RxJsonSchema<User> = {
@@ -244,4 +244,4 @@ export const resourceSchema: RxJsonSchema<Resource> = {
     },
     required: ['id', 'type', 'name', 'path', 'organizationId', 'contentType', 'language'],
     indexes: ['name', 'organizationId', 'contentType', 'language']
-}; 
+};  */

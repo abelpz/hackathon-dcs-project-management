@@ -1,17 +1,20 @@
 import React, { useState, FormEvent } from 'react';
 import { useProjectManager } from '../contexts/ProjectManagerContext';
+import { Milestone } from '../project-manager';
 
 interface CreateMilestoneModalProps {
     onClose: () => void;
     onMilestoneCreated: () => void;
+    currentMilestoneData?: Milestone;
+    projectId: string;
 }
 
-export const CreateMilestoneModal: React.FC<CreateMilestoneModalProps> = ({ onClose, onMilestoneCreated }) => {
+export const CreateMilestoneModal: React.FC<CreateMilestoneModalProps> = ({ onClose, onMilestoneCreated, currentMilestoneData, projectId }) => {
     const { projectManager } = useProjectManager();
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<Partial<Milestone>>(currentMilestoneData ?? {
         name: '',
         projectId: '',
-        teamId: ''
+        status: 'open'
     });
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -24,16 +27,31 @@ export const CreateMilestoneModal: React.FC<CreateMilestoneModalProps> = ({ onCl
         setError(null);
 
         try {
-          await projectManager.createMilestone( 
-            formData.name.trim(),
-            formData.projectId.trim(),
-            formData.teamId.trim(),
-            []
-          );
+            if (currentMilestoneData){
+          await projectManager.updateMilestone({
+            
+            id: currentMilestoneData.id,
+            type: currentMilestoneData.type,
+            name: formData.name?.trim() || "",
+            description: formData.description?.trim() || "",
+            projectId: formData.projectId?.trim() || "",
+            teamId: "",
+            resourceScope: formData.resourceScope || [],
+            status: formData.status as 'open' | 'closed'
+        }
+          )
+        } else {
+            await projectManager.createMilestone(
+                formData.name?.trim() || "",
+                projectId,
+                formData.teamId?.trim() || "",
+                formData.resourceScope || []
+              )
+        };
             onMilestoneCreated();
             onClose();
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to create milestone');
+            setError(err instanceof Error ? err.message : 'Failed to create or update milestone');
         } finally {
             setIsLoading(false);
         }
@@ -41,7 +59,9 @@ export const CreateMilestoneModal: React.FC<CreateMilestoneModalProps> = ({ onCl
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        (name === 'resourceScope')
+        ? setFormData((prev) => ({...prev, [name]: value.split(',').map((e) => e.trim())}))
+        : setFormData(prev => ({ ...prev, [name]: value }));
     };
 
     return (
@@ -69,7 +89,7 @@ export const CreateMilestoneModal: React.FC<CreateMilestoneModalProps> = ({ onCl
                         <textarea
                             id="description"
                             name="description"
-                            value={formData.projectId}
+                            value={formData.description}
                             onChange={handleChange}
                             className="theia-input"
                             rows={3}
@@ -80,13 +100,25 @@ export const CreateMilestoneModal: React.FC<CreateMilestoneModalProps> = ({ onCl
                         <select
                             id="status"
                             name="status"
-                            value={formData.teamId}
+                            value={formData.status}
                             onChange={handleChange}
                             className="theia-input"
                         >
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
+                            <option value="open">Active</option>
+                            <option value="closed">Inactive</option>
                         </select>
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="name">Resource Scope</label>
+                        <input
+                            type="text"
+                            id="resourceScope"
+                            name="resourceScope"
+                            value={formData.resourceScope}
+                            onChange={handleChange}
+                            required
+                            className="theia-input"
+                        />
                     </div>
                     {error && <div className="error-message">{error}</div>}
                     <div className="modal-actions">

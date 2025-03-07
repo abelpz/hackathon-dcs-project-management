@@ -61,7 +61,7 @@ export const ProjectList: React.FC = () => {
         <div className="project-manager-content">
             <div className="project-list-header">
                 <div className="header-left">
-                    <h3>Projects</h3>
+                    <h3>Projectdwadaws</h3>
                     <button 
                         className="theia-button main" 
                         onClick={() => setShowCreateModal(true)}

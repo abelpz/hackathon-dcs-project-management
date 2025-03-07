@@ -1,14 +1,16 @@
 import React, { useState, FormEvent } from 'react';
 import { useProjectManager } from '../contexts/ProjectManagerContext';
+import { Project } from '../project-manager';
 
 interface CreateProjectModalProps {
     onClose: () => void;
     onProjectCreated: () => void;
+    currentProjectData?: Project;
 }
 
-export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ onClose, onProjectCreated }) => {
+export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ onClose, onProjectCreated, currentProjectData }) => {
     const { projectManager } = useProjectManager();
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<Partial<Project>>(currentProjectData ?? {
         name: '',
         description: '',
         status: 'active'
@@ -24,14 +26,28 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ onClose,
         setError(null);
 
         try {
-          await projectManager.createProject(
-            formData.name.trim(),
-            "",
-            [],
-            [],
-            formData.description.trim(),
-            formData.status as 'active' | 'complete' | 'archived'
-          );
+            if (currentProjectData){
+          await projectManager.updateProject({
+            name: formData.name?.trim() || "",
+            teamId: "",
+            sourceResources: formData.sourceResources || [],
+            targetResources: formData.targetResources || [],
+            description: formData.description?.trim(),
+            status: formData.status as 'active' | 'complete' | 'archived',
+            id: currentProjectData.id,
+            organizationId: currentProjectData.organizationId
+        }
+          )
+        } else {
+            await projectManager.createProject(
+                formData.name?.trim() || "",
+                "",
+                formData.sourceResources || [],
+                formData.targetResources || [],
+                formData.description?.trim(),
+                formData.status as 'active' | 'complete' | 'archived'
+              )
+        };
             onProjectCreated();
             onClose();
         } catch (err) {
@@ -43,7 +59,9 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ onClose,
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        (name === 'targetResources' || name === 'sourceResources')
+        ? setFormData((prev) => ({...prev, [name]: value.split(',').map((e) => e.trim())}))
+        : setFormData(prev => ({ ...prev, [name]: value }));
     };
 
     return (
@@ -89,6 +107,30 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ onClose,
                             <option value="active">Active</option>
                             <option value="inactive">Inactive</option>
                         </select>
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="name">Target Resources</label>
+                        <input
+                            type="text"
+                            id="targetResources"
+                            name="targetResources"
+                            value={formData.targetResources}
+                            onChange={handleChange}
+                            required
+                            className="theia-input"
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="name">Source Resources</label>
+                        <input
+                            type="text"
+                            id="sourceResources"
+                            name="sourceResources"
+                            value={formData.sourceResources}
+                            onChange={handleChange}
+                            required
+                            className="theia-input"
+                        />
                     </div>
                     {error && <div className="error-message">{error}</div>}
                     <div className="modal-actions">
