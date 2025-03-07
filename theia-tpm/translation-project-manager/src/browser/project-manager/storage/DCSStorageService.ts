@@ -49,6 +49,9 @@ interface DCSIssue {
   };
   assignees: {
     id: number;
+    login_name: string;
+    name: string;
+    login: string;
   }[];
 }
 
@@ -1543,7 +1546,7 @@ export class DCSStorageService implements IStorageService {
               type: 'task',
               name: dcsIssue.title,
               milestoneId,
-              assignedUserIds: dcsIssue.assignees?.map(a => a.id.toString()) || [],
+              assignedUserIds: dcsIssue.assignees?.map(a => a.login) || [],
               resourceId: resource,
               status: dcsIssue.state === 'closed' ? 'closed' : 'open',
               description: dcsIssue.body
@@ -1580,11 +1583,7 @@ export class DCSStorageService implements IStorageService {
       if (!mapping) {
         throw new Error(`Resource ${task.resourceId} not mapped to milestone ${task.milestoneId}`);
       }
-      const assignees = await Promise.all(task.assignedUserIds.map(async id => {
-        if (!id) return {assignees: []}
-        const user = await this.getUser(id);
-        return user?.name ? {assignees: user?.name} : {assignees: []};
-      }))
+
       // Update issue in the resource repository
       await this.client.patch(
         `/repos/${this.config.organizationId}/${task.resourceId}/issues/${task.id}`,
@@ -1592,7 +1591,7 @@ export class DCSStorageService implements IStorageService {
           title: task.name,
           body: task.description || '',
           milestone: parseInt(mapping.milestoneId),
-          ...assignees,
+          assignees: task.assignedUserIds.filter(Boolean),
           state: task.status
         }
       );

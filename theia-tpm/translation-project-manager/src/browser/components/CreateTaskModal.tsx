@@ -74,7 +74,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onTas
         <div className="modal-overlay">
             <div className="modal-content">
                 <div className="modal-header">
-                    <h3>Create New Task</h3>
+                    <h3>{currentTaskData ? "Edit Task" : "Create New Task"}</h3>
                     <button className="close-button" onClick={onClose}>&times;</button>
                 </div>
                 <form onSubmit={handleSubmit}>
@@ -153,7 +153,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onTas
                             className="theia-button main"
                             disabled={isLoading}
                         >
-                            {isLoading ? 'Creating...' : 'Create Task'}
+                            {isLoading ? 'Creating...' : 'Submit'}
                         </button>
                     </div>
                 </form>

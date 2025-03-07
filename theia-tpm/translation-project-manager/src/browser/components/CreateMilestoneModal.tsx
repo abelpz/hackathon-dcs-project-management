@@ -68,7 +68,7 @@ export const CreateMilestoneModal: React.FC<CreateMilestoneModalProps> = ({ onCl
         <div className="modal-overlay">
             <div className="modal-content">
                 <div className="modal-header">
-                    <h3>Create New Milestone</h3>
+                    <h3>{currentMilestoneData ? "Edit Milestone" : "Create New Milestone"}</h3>
                     <button className="close-button" onClick={onClose}>&times;</button>
                 </div>
                 <form onSubmit={handleSubmit}>
@@ -135,7 +135,7 @@ export const CreateMilestoneModal: React.FC<CreateMilestoneModalProps> = ({ onCl
                             className="theia-button main"
                             disabled={isLoading}
                         >
-                            {isLoading ? 'Creating...' : 'Create Milestone'}
+                            {isLoading ? 'Creating...' : 'Submit'}
                         </button>
                     </div>
                 </form>

@@ -68,7 +68,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ onClose,
         <div className="modal-overlay">
             <div className="modal-content">
                 <div className="modal-header">
-                    <h3>Create New Project</h3>
+                    <h3>{currentProjectData ? "Edit Project" : "Create New Project"}</h3>
                     <button className="close-button" onClick={onClose}>&times;</button>
                 </div>
                 <form onSubmit={handleSubmit}>
@@ -147,7 +147,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ onClose,
                             className="theia-button main"
                             disabled={isLoading}
                         >
-                            {isLoading ? 'Creating...' : 'Create Project'}
+                            {isLoading ? 'Creating...' : 'Submit'}
                         </button>
                     </div>
                 </form>
