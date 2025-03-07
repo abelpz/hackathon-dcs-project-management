@@ -185,8 +185,8 @@ export class ProjectManager {
     return this.storageService.getTask(id, milestoneId, projectId);
   }
 
-  async updateTask(task: Task, milestoneId: string, projectId: string): Promise<Task> {
-    return this.storageService.updateTask(task, milestoneId, projectId);
+  async updateTask(task: Task, projectId: string): Promise<Task> {
+    return this.storageService.updateTask(task, projectId);
   }
 
   async deleteTask(id: string, milestoneId: string, projectId: string): Promise<void> {

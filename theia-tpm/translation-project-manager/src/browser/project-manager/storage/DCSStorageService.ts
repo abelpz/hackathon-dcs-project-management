@@ -40,6 +40,7 @@ interface DCSUser {
 
 interface DCSIssue {
   id: number;
+  number: number;
   title: string;
   body: string;
   state: string;
@@ -481,7 +482,7 @@ export class DCSStorageService implements IStorageService {
       if (dcsUser) {
         return {
           id: dcsUser.id.toString(),
-          name: dcsUser.full_name || dcsUser.login,
+          name: dcsUser.login_name,
           email: dcsUser.email,
           organizationId: this.config.organizationId || 'default',
           avatarUrl: dcsUser.avatar_url
@@ -1489,7 +1490,7 @@ export class DCSStorageService implements IStorageService {
 
       // Convert DCS issue to Task with explicit type
       const task: Task = {
-        id: dcsIssue.id.toString(),
+        id: dcsIssue.number.toString(),
         type: 'task',
         name: dcsIssue.title,
         milestoneId: input.milestoneId,
@@ -1538,7 +1539,7 @@ export class DCSStorageService implements IStorageService {
             }
 
             return {
-              id: dcsIssue.id.toString(),
+              id: dcsIssue.number.toString(),
               type: 'task',
               name: dcsIssue.title,
               milestoneId,
@@ -1579,7 +1580,11 @@ export class DCSStorageService implements IStorageService {
       if (!mapping) {
         throw new Error(`Resource ${task.resourceId} not mapped to milestone ${task.milestoneId}`);
       }
-
+      const assignees = await Promise.all(task.assignedUserIds.map(async id => {
+        if (!id) return {assignees: []}
+        const user = await this.getUser(id);
+        return user?.name ? {assignees: user?.name} : {assignees: []};
+      }))
       // Update issue in the resource repository
       await this.client.patch(
         `/repos/${this.config.organizationId}/${task.resourceId}/issues/${task.id}`,
@@ -1587,10 +1592,7 @@ export class DCSStorageService implements IStorageService {
           title: task.name,
           body: task.description || '',
           milestone: parseInt(mapping.milestoneId),
-          assignees: await Promise.all(task.assignedUserIds.map(async id => {
-            const user = await this.getUser(id);
-            return user?.name || '';
-          })),
+          ...assignees,
           state: task.status
         }
       );
@@ -1662,7 +1664,7 @@ export class DCSStorageService implements IStorageService {
               totalCount++;
               if (totalCount > startIndex && totalCount <= endIndex) {
                 tasks.push({
-                  id: dcsIssue.id.toString(),
+                  id: dcsIssue.number.toString(),
                   type: 'task',
                   name: dcsIssue.title,
                   milestoneId,
@@ -1733,7 +1735,7 @@ export class DCSStorageService implements IStorageService {
           );
 
           tasks.push(...dcsIssues.map(issue => ({
-            id: issue.id.toString(),
+            id: issue.number.toString(),
             type: 'task' as const,
             name: issue.title,
             milestoneId,
@@ -1796,7 +1798,7 @@ export class DCSStorageService implements IStorageService {
 
             if (milestoneId) {
               tasks.push({
-                id: dcsIssue.id.toString(),
+                id: dcsIssue.number.toString(),
                 type: 'task',
                 name: dcsIssue.title,
                 milestoneId,

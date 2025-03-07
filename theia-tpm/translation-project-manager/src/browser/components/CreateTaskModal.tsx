@@ -34,12 +34,12 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onTas
             id: currentTaskData.id,
             type: currentTaskData.type,
             name: formData.name?.trim() || "",
-            milestoneId: milestoneId,
+            milestoneId: currentTaskData.milestoneId,
             assignedUserIds: formData.assignedUserIds || [],
             resourceId: currentTaskData.resourceId,
             status: formData.status as 'open' | 'closed',
             description: formData.description?.trim() || "" 
-        }, milestoneId, projectId
+        }, projectId
           )
         } else {
             await projectManager.createTask({
@@ -54,6 +54,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onTas
             onTaskCreated();
             onClose();
         } catch (err) {
+            console.error(err)
             setError(err instanceof Error ? err.message : 'Failed to create or update Task');
         } finally {
             setIsLoading(false);
@@ -67,7 +68,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onTas
         : setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    console.log(currentTaskData)
+    console.log(currentTaskData?.id)
 
     return (
         <div className="modal-overlay">
@@ -108,7 +109,6 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onTas
                             name="assignedUserIds"
                             value={formData.assignedUserIds}
                             onChange={handleChange}
-                            required
                             className="theia-input"
                         />
                     </div>

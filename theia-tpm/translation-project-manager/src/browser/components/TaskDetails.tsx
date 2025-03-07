@@ -32,7 +32,6 @@ export const TaskDetails: React.FC<TaskDetailsProps> = ({ projectId, milestoneId
             setIsLoading(true);
             console.log('Loading tasks...'); // Debug log
             await projectManager?.getTask(taskId, milestoneId, projectId).then((data) => setTask(data))
-            throw new Error("Task no encontrado")
 
         } catch (err) {
             console.error('Error loading tasks:', err); // Debug log

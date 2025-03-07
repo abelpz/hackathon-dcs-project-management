@@ -138,7 +138,7 @@ export interface IStorageService {
   // Task operations
   createTask(input: CreateTaskInput, projectId: string): Promise<Task>;
   getTask(id: string, milestoneId: string, projectId: string): Promise<Task | null>;
-  updateTask(task: Task, milestoneId: string, projectId: string): Promise<Task>;
+  updateTask(task: Task, projectId: string): Promise<Task>;
   deleteTask(id: string, milestoneId: string, projectId: string): Promise<void>;
   getAllTasks(): Promise<Task[]>;
   getTasksByMilestone(milestoneId: string, projectId: string): Promise<Task[]>;
