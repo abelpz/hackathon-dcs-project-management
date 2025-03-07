@@ -94,7 +94,7 @@ export function DCSLogin() {
       <h2 className="text-xl font-bold mb-4">DCS Login</h2>
       <form onSubmit={handleLogin} className="space-y-4">
         <div>
-          <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="username" className="block text-sm font-medium text-gray-700 text-start">
             Username
           </label>
           <input
@@ -107,7 +107,7 @@ export function DCSLogin() {
           />
         </div>
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="password" className="block text-sm font-medium text-gray-700 text-start">
             Password
           </label>
           <input
