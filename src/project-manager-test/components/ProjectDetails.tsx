@@ -84,6 +84,7 @@ export function ProjectDetails({ projectId, onBack }: ProjectDetailsProps) {
       <MilestoneDetails
         milestoneId={selectedMilestoneId}
         onBack={() => setSelectedMilestoneId(null)}
+        projectId={projectId}
       />
     );
   }
