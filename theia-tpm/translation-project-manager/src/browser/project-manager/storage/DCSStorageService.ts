@@ -1264,6 +1264,10 @@ export class DCSStorageService implements IStorageService {
           dcsMapping: dcsMappings
         };
 
+        if (!projectData.milestones) {
+          projectData.milestones = [];
+        }
+
         projectData.milestones.push(processedMilestone);
         await this.storeMetadata(
           this.config.organizationId || 'default',
@@ -1430,7 +1434,7 @@ export class DCSStorageService implements IStorageService {
   async getMilestonesByProject(projectId: string): Promise<Milestone[]> {
     try {
       const projectData = await this.getProcessedProjectData(projectId);
-      return projectData.milestones.map(m => ({
+      return projectData.milestones?.map(m => ({
         id: m.id,
         type: 'milestone',
         name: m.name,
@@ -1438,7 +1442,7 @@ export class DCSStorageService implements IStorageService {
         teamId: m.teamId,
         resourceScope: m.resources,
         status: m.status
-      }));
+      })) || [];
     } catch (error) {
       this.handleApiError(error, 'project milestones retrieval');
     }

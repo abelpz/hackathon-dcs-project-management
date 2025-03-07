@@ -40,6 +40,7 @@ export function ProjectDetails({ projectId, onBack }: ProjectDetailsProps) {
       setProject(projectData);
       setMilestones(milestonesData);
     } catch (err) {
+      console.error('Error loading project:', err);
       setError(err instanceof Error ? err.message : 'Failed to load project');
     } finally {
       setIsLoading(false);
@@ -75,6 +76,7 @@ export function ProjectDetails({ projectId, onBack }: ProjectDetailsProps) {
       setIsAddingResources(false);
       loadProject();
     } catch (err) {
+      console.error('Error adding resources:', err);
       setAddResourceError(err instanceof Error ? err.message : 'Failed to add resources');
     }
   };

@@ -42,6 +42,7 @@ export function CreateMilestoneModal({
       onMilestoneCreated();
       onClose();
     } catch (err) {
+      console.error('Error creating milestone:', err);
       setError(err instanceof Error ? err.message : 'Failed to create milestone');
     } finally {
       setIsLoading(false);
