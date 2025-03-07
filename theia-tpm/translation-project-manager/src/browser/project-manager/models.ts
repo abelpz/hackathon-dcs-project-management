@@ -2,7 +2,6 @@
 
 export interface User {
     id: string;
-    type: 'user';
     name: string;
     email: string;
     organizationId: string;
@@ -11,8 +10,8 @@ export interface User {
 
 export interface Team {
     id: string;
-    type: 'team';
     name: string;
+    description?: string;
     organizationId: string;
     userIds: string[]; // IDs of users in this team
 }
@@ -21,7 +20,6 @@ export interface Organization {
     id: string;
     type: 'organization';
     name: string;
-    teamIds: string[]; // IDs of teams in this organization
 }
 
 export interface Resource {
@@ -37,14 +35,13 @@ export interface Resource {
 
 export interface Project {
     id: string;
-    type: 'project';
     name: string;
+    description?: string;
     organizationId: string;
     teamId: string; // ID of the team assigned to this project
     sourceResources: string[]; // IDs of source resources used as input
     targetResources: string[]; // IDs of target resources being created/modified
     status: 'active' | 'complete' | 'archived';
-    description?: string;
 }
 
 export interface Milestone {
@@ -54,6 +51,7 @@ export interface Milestone {
     projectId: string;
     teamId?: string; // ID of the team assigned to this milestone (must be same as project team or a subteam)
     resourceScope: string[]; // Subset of project resource IDs that can be affected by this milestone
+    status: 'open' | 'closed';
 }
 
 export interface Task {
