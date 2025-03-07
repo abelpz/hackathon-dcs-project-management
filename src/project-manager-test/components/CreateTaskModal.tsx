@@ -73,7 +73,7 @@ export function CreateTaskModal({ isOpen, onClose, milestone, onTaskCreated }: C
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base border-1 px-3.5 py-2"
+                className="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base border-1 px-3.5 py-2"
                 placeholder="Enter task name"
               />
             </div>
@@ -87,7 +87,7 @@ export function CreateTaskModal({ isOpen, onClose, milestone, onTaskCreated }: C
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={3}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base border-1 px-3.5 py-2"
+                className="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base border-1 px-3.5 py-2"
                 placeholder="Enter task description"
               />
             </div>
@@ -100,7 +100,7 @@ export function CreateTaskModal({ isOpen, onClose, milestone, onTaskCreated }: C
                 id="resource"
                 value={selectedResource}
                 onChange={(e) => setSelectedResource(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base border-1 px-3.5 py-2"
+                className="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base border-1 px-3.5 py-2"
               >
                 <option value="">Select a resource</option>
                 {milestone.resourceScope.map((resource) => (
