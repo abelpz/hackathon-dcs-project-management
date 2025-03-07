@@ -347,8 +347,7 @@ export class DCSStorageService implements IStorageService {
       const organization: Organization = {
         id: dcsOrg.id.toString(),
         type: 'organization',
-        name: dcsOrg.username,
-        teamIds: input.teamIds || []
+        name: dcsOrg.username
       };
 
       await this.storeMetadata(
@@ -379,8 +378,7 @@ export class DCSStorageService implements IStorageService {
         const organization: Organization = {
           id: dcsOrg.id.toString(),
           type: 'organization',
-          name: dcsOrg.username,
-          teamIds: []
+          name: dcsOrg.username
         };
 
         await this.storeMetadata(
@@ -462,7 +460,6 @@ export class DCSStorageService implements IStorageService {
       // Map DCS user to our domain model
       return {
         id: dcsUser.id.toString(),
-        type: 'user',
         name: dcsUser.full_name || dcsUser.login,
         email: dcsUser.email || input.email,
         organizationId: input.organizationId,
@@ -484,7 +481,6 @@ export class DCSStorageService implements IStorageService {
       if (dcsUser) {
         return {
           id: dcsUser.id.toString(),
-          type: 'user',
           name: dcsUser.full_name || dcsUser.login,
           email: dcsUser.email,
           organizationId: this.config.organizationId || 'default',
@@ -509,7 +505,6 @@ export class DCSStorageService implements IStorageService {
       
       return {
         id: dcsUser.id.toString(),
-        type: 'user',
         name: dcsUser.full_name || dcsUser.login,
         email: dcsUser.email,
         organizationId: user.organizationId,
@@ -585,6 +580,46 @@ export class DCSStorageService implements IStorageService {
     }
   }
 
+  async addUserToTeam(userId: string, teamId: string): Promise<void> {
+    try {
+      const user = await this.getUser(userId);
+      if (!user) {
+        throw new Error(`User ${userId} not found`);
+      }
+      await this.client.put(`/teams/${teamId}/members/${user.name}`);
+    } catch (error) {
+      this.handleApiError(error, 'add user to team');
+    }
+  }
+
+  async removeUserFromTeam(userId: string, teamId: string): Promise<void> {
+    try {
+      const user = await this.getUser(userId);
+      if (!user) {
+        throw new Error(`User ${userId} not found`);
+      }
+      await this.client.delete(`/teams/${teamId}/members/${user.name}`);
+    } catch (error) {
+      this.handleApiError(error, 'remove user from team');
+    }
+  }
+
+  async addUserToOrganization(userId: string, organizationId: string): Promise<void> {
+    try {
+      const user = await this.getUser(userId);
+      if (!user) {
+        throw new Error(`User ${userId} not found`);
+      }
+      const org = await this.getOrganization(organizationId);
+      if (!org) {
+        throw new Error(`Organization ${organizationId} not found`);
+      }
+      await this.client.put(`/orgs/${org.name}/members/${user.name}`);
+    } catch (error) {
+      this.handleApiError(error, 'add user to organization');
+    }
+  }
+
   // Team operations
   async createTeam(input: CreateTeamInput): Promise<Team> {
     try {
@@ -611,7 +646,6 @@ export class DCSStorageService implements IStorageService {
 
       return {
         id: dcsTeam.id.toString(),
-        type: 'team',
         name: input.name,
         organizationId: input.organizationId,
         userIds: input.userIds
@@ -632,7 +666,6 @@ export class DCSStorageService implements IStorageService {
 
       return {
         id: dcsTeam.id.toString(),
-        type: 'team',
         name: dcsTeam.name,
         organizationId: dcsTeam.organization.id.toString(),
         userIds
@@ -711,7 +744,6 @@ export class DCSStorageService implements IStorageService {
 
           allTeams.push({
             id: dcsTeam.id.toString(),
-            type: 'team',
             name: dcsTeam.name,
             organizationId: org.id,
             userIds
@@ -743,7 +775,6 @@ export class DCSStorageService implements IStorageService {
 
         teams.push({
           id: dcsTeam.id.toString(),
-          type: 'team',
           name: dcsTeam.name,
           organizationId: orgId,
           userIds
@@ -1048,7 +1079,6 @@ export class DCSStorageService implements IStorageService {
       name: project.name,
       id: project.id,
       status: project.status,
-      type: 'project',
       organizationId: this.config.organizationId || 'default',
       teamId: project.teamId,
       sourceResources: project.sourceResources,
@@ -1217,7 +1247,8 @@ export class DCSStorageService implements IStorageService {
           name: input.name,
           projectId: input.projectId,
           teamId: input.teamId,
-          resourceScope: input.resourceScope
+          resourceScope: input.resourceScope,
+          status: 'open'
         };
 
         // Update project metadata with milestone mappings
@@ -1281,7 +1312,8 @@ export class DCSStorageService implements IStorageService {
             name: milestone.name,
             projectId: project.id,
             teamId: milestone.teamId,
-            resourceScope: milestone.resources
+            resourceScope: milestone.resources,
+            status: milestone.status
           };
         }
       }
@@ -1302,7 +1334,7 @@ export class DCSStorageService implements IStorageService {
         try {
           await this.client.patch(
             `/repos/${this.config.organizationId}/${mapping.repoName}/milestones/${mapping.milestoneId}`,
-            { title: milestone.name }
+            { title: milestone.name, state: milestone.status, description: milestone.description }
           );
         } catch (error) {
           console.error(`Failed to update milestone in repo ${mapping.repoName}:`, error);
@@ -1383,7 +1415,8 @@ export class DCSStorageService implements IStorageService {
             name: dcsMilestone.title,
             projectId: project.id,
             teamId: project.teamId,
-            resourceScope: []
+            resourceScope: [],
+            status: 'open'
           });
         }
       }
@@ -1406,7 +1439,8 @@ export class DCSStorageService implements IStorageService {
         name: m.name,
         projectId: projectId,
         teamId: m.teamId,
-        resourceScope: m.resources
+        resourceScope: m.resources,
+        status: m.status
       }));
     } catch (error) {
       this.handleApiError(error, 'project milestones retrieval');
@@ -1470,17 +1504,17 @@ export class DCSStorageService implements IStorageService {
     }
   }
 
-  async getTask(id: string): Promise<Task | null> {
+  async getTask(id: string, milestoneId: string): Promise<Task | null> {
     try {
       this.validateOrganizationId();
       // Since tasks are stored as issues in resource repositories,
       // we need to search through all resources in the organization
-      const resources = await this.getAllResources();
+      const milestone = await this.getMilestone(milestoneId);
       
-      for (const resource of resources) {
+      for (const resource of milestone?.resourceScope || []) {
         try {
           const { data: dcsIssue } = await this.client.get<DCSIssue>(
-            `/repos/${this.config.organizationId}/${resource.name}/issues/${id}`
+            `/repos/${this.config.organizationId}/${resource}/issues/${id}`
           );
 
           if (dcsIssue) {
@@ -1492,7 +1526,7 @@ export class DCSStorageService implements IStorageService {
               const projectData = await this.getProcessedProjectData(project.id);
               for (const milestone of projectData.milestones) {
                 const mapping = milestone.dcsMapping.find(
-                  m => m.repoName === resource.name && m.milestoneId === dcsIssue.milestone?.id.toString()
+                  m => m.repoName === resource && m.milestoneId === dcsIssue.milestone?.id.toString()
                 );
                 if (mapping) {
                   milestoneId = milestone.id;
@@ -1508,7 +1542,7 @@ export class DCSStorageService implements IStorageService {
               name: dcsIssue.title,
               milestoneId,
               assignedUserIds: dcsIssue.assignees.map(a => a.id.toString()),
-              resourceId: resource.name,
+              resourceId: resource,
               status: dcsIssue.state === 'closed' ? 'closed' : 'open',
               description: dcsIssue.body
             };
@@ -1566,9 +1600,9 @@ export class DCSStorageService implements IStorageService {
     }
   }
 
-  async deleteTask(id: string): Promise<void> {
+  async deleteTask(id: string, milestoneId: string): Promise<void> {
     try {
-      const task = await this.getTask(id);
+      const task = await this.getTask(id, milestoneId);
       if (!task) return;
 
       // Close issue in the resource repository (GitHub API doesn't allow deleting issues)

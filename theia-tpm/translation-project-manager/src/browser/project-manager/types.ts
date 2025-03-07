@@ -69,6 +69,16 @@ export interface CreateTaskInput {
   description?: string;
 }
 
+
+
+export interface UpdateTeamInput {
+  id: string;
+  name?: string;
+  description?: string;
+  memberIds?: string[];
+  leaderId?: string;
+}
+
 export interface IStorageService {
   // Database operations
   initialize(): Promise<void>;
@@ -87,10 +97,10 @@ export interface IStorageService {
   // Team operations
   createTeam(input: CreateTeamInput): Promise<Team>;
   getTeam(id: string): Promise<Team | null>;
-  updateTeam(team: Team): Promise<Team>;
+  updateTeam(input: UpdateTeamInput): Promise<Team>;
   deleteTeam(id: string): Promise<void>;
   getAllTeams(): Promise<Team[]>;
-  getTeamsByOrganization(orgId: string): Promise<Team[]>;
+  getTeamsByOrganization(organizationId: string): Promise<Team[]>;
   
   // Organization operations
   createOrganization(input: CreateOrganizationInput): Promise<Organization>;
@@ -127,12 +137,18 @@ export interface IStorageService {
 
   // Task operations
   createTask(input: CreateTaskInput): Promise<Task>;
-  getTask(id: string): Promise<Task | null>;
-  updateTask(task: Task): Promise<Task>;
-  deleteTask(id: string): Promise<void>;
+  getTask(id: string, milestoneId: string): Promise<Task | null>;
+  updateTask(task: Task, milestoneId: string): Promise<Task>;
+  deleteTask(id: string, milestoneId: string): Promise<void>;
   getAllTasks(): Promise<Task[]>;
   getTasksByMilestone(milestoneId: string): Promise<Task[]>;
   getTasksByUser(userId: string): Promise<Task[]>;
+
+  // User methods
+  getUsersByOrganization(organizationId: string): Promise<User[]>;
+  addUserToTeam(userId: string, teamId: string): Promise<void>;
+  removeUserFromTeam(userId: string, teamId: string): Promise<void>;
+  addUserToOrganization(userId: string, organizationId: string): Promise<void>;
 }
 
 export const TYPES = {
