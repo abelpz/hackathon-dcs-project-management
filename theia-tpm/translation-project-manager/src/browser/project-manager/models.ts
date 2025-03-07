@@ -48,6 +48,7 @@ export interface Milestone {
     id: string;
     type: 'milestone';
     name: string;
+    description?: string;
     projectId: string;
     teamId?: string; // ID of the team assigned to this milestone (must be same as project team or a subteam)
     resourceScope: string[]; // Subset of project resource IDs that can be affected by this milestone

@@ -1334,7 +1334,7 @@ export class DCSStorageService implements IStorageService {
         try {
           await this.client.patch(
             `/repos/${this.config.organizationId}/${mapping.repoName}/milestones/${mapping.milestoneId}`,
-            { title: milestone.name }
+            { title: milestone.name, state: milestone.status, description: milestone.description }
           );
         } catch (error) {
           console.error(`Failed to update milestone in repo ${mapping.repoName}:`, error);
