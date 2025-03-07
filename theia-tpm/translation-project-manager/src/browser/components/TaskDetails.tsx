@@ -59,7 +59,7 @@ export const TaskDetails: React.FC<TaskDetailsProps> = ({ projectId, milestoneId
                 <button className="theia-button secondary" onClick={goBack}>
                     ← Back to Milestone
                 </button>
-                <h3>{task?.name}</h3><button className='theia-button primary' onClick={() => { setEditView(!editView) }}>Edit Task</button>
+                <h2>{task?.name}</h2><button className='theia-button primary' onClick={() => { setEditView(!editView) }}>Edit Task</button>
             </div>
             <div className="details-info">
                 <h4>{task?.name}</h4>  

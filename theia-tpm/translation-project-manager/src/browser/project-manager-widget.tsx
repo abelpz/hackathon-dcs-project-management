@@ -26,7 +26,7 @@ export class ProjectManagerWidget extends BaseWidget {
         this.title.label = ProjectManagerWidget.LABEL;
         this.title.caption = ProjectManagerWidget.LABEL;
         this.title.closable = false;
-        this.title.iconClass = 'fa fa-project-diagram';
+        this.title.iconClass = 'fa fa-list-ul';
         this.addClass('project-manager-widget');
     }
 

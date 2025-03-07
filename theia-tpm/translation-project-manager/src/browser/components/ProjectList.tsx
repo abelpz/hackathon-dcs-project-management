@@ -61,18 +61,12 @@ export const ProjectList: React.FC = () => {
         <div className="project-manager-content">
             <div className="project-list-header">
                 <div className="header-left">
-                    <h3>Projectdwadaws</h3>
+                    <h3>Projects</h3>
                     <button 
                         className="theia-button main" 
                         onClick={() => setShowCreateModal(true)}
                     >
                         Create Project
-                    </button>
-                    <button 
-                        className="theia-button main" 
-                        onClick={() => navigate({type: "milestone-details", projectId: "project-1741286121316-y7yhuubq6", milestoneId: "milestone-1741286372389-3gjz19vf8"})}
-                    >
-                        View Milestone
                     </button>
                 </div>
                 <button className="theia-button secondary" onClick={logout}>

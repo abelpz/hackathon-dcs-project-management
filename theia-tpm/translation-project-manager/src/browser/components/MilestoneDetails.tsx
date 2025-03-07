@@ -89,7 +89,7 @@ export const MilestoneDetails: React.FC<MilestoneDetailsProps> = ({ projectId, m
                 <button className="theia-button secondary" onClick={goBack}>
                     ← Back to Project
                 </button>
-                <h3>{milestone?.name}</h3><button className='theia-button primary' onClick={() => { setEditView(!editView) }}>Edit Milestone</button>
+                <h2>{milestone?.name}</h2><button className='theia-button primary' onClick={() => { setEditView(!editView) }}>Edit Milestone</button>
             </div>
             <div className="details-info">
                 <p>Project ID: {projectId}</p>

@@ -69,7 +69,7 @@ export const ProjectDetails: React.FC<ProjectDetailsProps> = ({ projectId }) => 
                 <button className="theia-button secondary" onClick={goBack}>
                     ← Back to Projects
                 </button>
-                <h3>{project?.name}</h3> <button className='theia-button primary' onClick={() => { setEditView(!editView) }}>Edit</button>
+                <h2>{project?.name}</h2> <button className='theia-button primary' onClick={() => { setEditView(!editView) }}>Edit</button>
             </div>
             <div className="details-info">
                 <p>{project?.description}</p>

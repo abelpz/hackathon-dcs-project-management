@@ -1524,11 +1524,10 @@ export class DCSStorageService implements IStorageService {
 
           if (dcsIssue) {
             // Find the milestone this issue belongs to
-            const projects = await this.getAllProjects();
             let milestoneId = '';
 
-            for (const project of projects) {
-              const projectData = await this.getProcessedProjectData(project.id);
+           
+              const projectData = await this.getProcessedProjectData(projectId);
               for (const milestone of projectData.milestones) {
                 const mapping = milestone.dcsMapping.find(
                   m => m.repoName === resource && m.milestoneId === dcsIssue.milestone?.id.toString()
@@ -1538,8 +1537,7 @@ export class DCSStorageService implements IStorageService {
                   break;
                 }
               }
-              if (milestoneId) break;
-            }
+            
 
             return {
               id: dcsIssue.number.toString(),
