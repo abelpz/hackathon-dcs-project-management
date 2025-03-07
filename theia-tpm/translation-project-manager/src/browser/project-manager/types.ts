@@ -128,20 +128,20 @@ export interface IStorageService {
 
   // Milestone operations
   createMilestone(input: CreateMilestoneInput): Promise<Milestone>;
-  getMilestone(id: string): Promise<Milestone | null>;
-  updateMilestone(milestone: Milestone): Promise<Milestone>;
-  deleteMilestone(id: string): Promise<void>;
+  getMilestone(id: string, projectId: string): Promise<Milestone | null>;
+  updateMilestone(milestone: Milestone, projectId: string): Promise<Milestone>;
+  deleteMilestone(id: string, projectId: string): Promise<void>;
   getAllMilestones(): Promise<Milestone[]>;
   getMilestonesByProject(projectId: string): Promise<Milestone[]>;
   getMilestonesByTeam(teamId: string): Promise<Milestone[]>;
 
   // Task operations
-  createTask(input: CreateTaskInput): Promise<Task>;
-  getTask(id: string, milestoneId: string): Promise<Task | null>;
-  updateTask(task: Task, milestoneId: string): Promise<Task>;
-  deleteTask(id: string, milestoneId: string): Promise<void>;
+  createTask(input: CreateTaskInput, projectId: string): Promise<Task>;
+  getTask(id: string, milestoneId: string, projectId: string): Promise<Task | null>;
+  updateTask(task: Task, milestoneId: string, projectId: string): Promise<Task>;
+  deleteTask(id: string, milestoneId: string, projectId: string): Promise<void>;
   getAllTasks(): Promise<Task[]>;
-  getTasksByMilestone(milestoneId: string): Promise<Task[]>;
+  getTasksByMilestone(milestoneId: string, projectId: string): Promise<Task[]>;
   getTasksByUser(userId: string): Promise<Task[]>;
 
   // User methods
