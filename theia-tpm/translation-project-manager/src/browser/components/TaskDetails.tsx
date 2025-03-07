@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useProjectManager } from '../contexts/ProjectManagerContext';
 import { useNavigation } from '../contexts/NavigationContext';
 import { Task } from '../project-manager';
+import { CreateTaskModal } from './CreateTaskModal';
 
 interface TaskDetailsProps {
     projectId: string;
@@ -11,22 +12,55 @@ interface TaskDetailsProps {
 
 export const TaskDetails: React.FC<TaskDetailsProps> = ({ projectId, milestoneId, taskId }) => {
     const { projectManager } = useProjectManager();
-    const { navigate, goBack } = useNavigation();
+    const { goBack } = useNavigation();
     const [ task, setTask] = useState<Task | null>();
+    const [ editView, setEditView ] = useState<boolean>(false);
+    const [isLoading, setIsLoading ] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         projectManager?.getTask(taskId, milestoneId, projectId).then((data) => setTask(data))
     }, [])
-  
-  console.log({projectManager, navigate})
 
+    const loadProjects = async () => {
+        if (!projectManager) {
+            setIsLoading(false);
+            return;
+        }
+
+        try {
+            setIsLoading(true);
+            console.log('Loading tasks...'); // Debug log
+            await projectManager?.getTask(taskId, milestoneId, projectId).then((data) => setTask(data))
+            throw new Error("Task no encontrado")
+
+        } catch (err) {
+            console.error('Error loading tasks:', err); // Debug log
+            setError(err instanceof Error ? err.message : 'Failed to load tasks');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    if (isLoading) {
+        return (
+            <div className="loading-indicator">
+                <div className="spinner" />
+            </div>
+        );
+    }
+
+    if (error) {
+        return <div className="error-message">{error}</div>;
+    }
+    
     return (
         <div className="task-details">
             <div className="details-header">
                 <button className="theia-button secondary" onClick={goBack}>
                     ← Back to Milestone
                 </button>
-                <h3>Task Details</h3>
+                <h3>{task?.name}</h3><button className='theia-button primary' onClick={() => { setEditView(!editView) }}>Edit Task</button>
             </div>
             <div className="details-info">
                 <h4>{task?.name}</h4>  
@@ -38,6 +72,18 @@ export const TaskDetails: React.FC<TaskDetailsProps> = ({ projectId, milestoneId
                 <p>Description: {task?.description}</p>
                 <p>Status: {task?.status}</p>
             </div>
+            {editView && (
+                <CreateTaskModal
+                    onClose={() => setEditView(false)}
+                    onTaskCreated={() => {
+                        setEditView(false);
+                        loadProjects();
+                    }}
+                    currentTaskData={task === null ? undefined : task}
+                    milestoneId={milestoneId}
+                    projectId={projectId}
+                />
+            )}
         </div>
     );
 }; 

@@ -3,6 +3,7 @@ import { useProjectManager } from '../contexts/ProjectManagerContext';
 import { useNavigation } from '../contexts/NavigationContext';
 import { Milestone, Task } from '../project-manager';
 import { CreateMilestoneModal } from './CreateMilestoneModal';
+import { CreateTaskModal } from './CreateTaskModal';
 
 interface MilestoneDetailsProps {
     projectId: string;
@@ -17,6 +18,7 @@ export const MilestoneDetails: React.FC<MilestoneDetailsProps> = ({ projectId, m
     const [ editView, setEditView ] = useState<boolean>(false);
     const [isLoading, setIsLoading ] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [showCreateModal, setShowCreateModal] = useState(false);
 
 
     useEffect(() => {
@@ -44,7 +46,7 @@ export const MilestoneDetails: React.FC<MilestoneDetailsProps> = ({ projectId, m
 
         try {
             setIsLoading(true);
-            console.log('Loading projects...'); // Debug log
+            console.log('Loading Milestones...'); // Debug log
             await projectManager?.getMilestone(milestoneId, projectId).then((data) => {
             if ((data?.name !== undefined) || (data?.name !== null)) {
             setMilestone(data)
@@ -56,8 +58,8 @@ export const MilestoneDetails: React.FC<MilestoneDetailsProps> = ({ projectId, m
                 setTasks(data);
                 })
         } catch (err) {
-            console.error('Error loading projects:', err); // Debug log
-            setError(err instanceof Error ? err.message : 'Failed to load projects');
+            console.error('Error loading milestones:', err); // Debug log
+            setError(err instanceof Error ? err.message : 'Failed to load milestone');
         } finally {
             setIsLoading(false);
         }
@@ -81,7 +83,6 @@ export const MilestoneDetails: React.FC<MilestoneDetailsProps> = ({ projectId, m
     }
     
 
-
     return (
         <div className="milestone-details">
             <div className="details-header">
@@ -97,7 +98,20 @@ export const MilestoneDetails: React.FC<MilestoneDetailsProps> = ({ projectId, m
             <div className="placeholder-message">
                 Milestone details coming soon...
             </div>
-            <h3>Tareas</h3>
+            <div>
+                <h3>Tareas</h3><button className='theia-button primary' onClick={() => { setShowCreateModal(!showCreateModal) }}>Create Task</button>            
+            </div>
+            { showCreateModal  &&
+                <CreateTaskModal
+                    onClose={() => setShowCreateModal(false)}
+                    onTaskCreated={() => {
+                        setShowCreateModal(false);
+                        loadProjects();
+                    }}
+                    milestoneId={milestoneId}
+                    projectId={projectId}
+                />
+            }
             {!tasks?.length ? (
                 <div className="no-tasks">No tasks found</div>
             ) : (
@@ -106,9 +120,9 @@ export const MilestoneDetails: React.FC<MilestoneDetailsProps> = ({ projectId, m
                         <div 
                             key={tasks?.id} 
                             className="project-item"
-                            onClick={() => {typeof tasks?.id === 'string' && handleProjectClick(projectId, milestoneId, tasks?.id)}}
+                            onClick={() => {handleProjectClick(projectId, milestoneId, tasks?.id)}}
                         >
-                            <div className="project-name">{tasks?.name}</div>
+                            <div className="project-name">{tasks?.name}{tasks?.id}{tasks?.resourceId}</div>
                         </div>
                     ))}
                 </div>

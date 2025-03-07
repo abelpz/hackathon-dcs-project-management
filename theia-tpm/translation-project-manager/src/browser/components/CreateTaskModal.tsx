@@ -5,17 +5,18 @@ import { Task } from '../project-manager';
 interface CreateTaskModalProps {
     onClose: () => void;
     onTaskCreated: () => void;
-    currentTaskata?: Task;
+    currentTaskData?: Task;
+    milestoneId: string;
     projectId: string;
 }
 
-export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onTaskCreated, currentTaskData, projectId }) => {
+export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onTaskCreated, currentTaskData, milestoneId, projectId }) => {
     const { projectManager } = useProjectManager();
     const [formData, setFormData] = useState<Partial<Task>>(currentTaskData ?? {
         name: '',
         description: '',
         status: 'open',
-        projectId: projectId
+        milestoneId: milestoneId
     });
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -33,25 +34,27 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onTas
             id: currentTaskData.id,
             type: currentTaskData.type,
             name: formData.name?.trim() || "",
-            description: formData.description?.trim() || "",
-            projectId: projectId,
-            teamId: currentTaskData.teamId,
-            resourceScope: formData.resourceScope || [],
-            status: formData.status as 'open' | 'closed'
-        }, projectId
+            milestoneId: milestoneId,
+            assignedUserIds: formData.assignedUserIds || [],
+            resourceId: currentTaskData.resourceId,
+            status: formData.status as 'open' | 'closed',
+            description: formData.description?.trim() || "" 
+        }, milestoneId, projectId
           )
         } else {
-            await projectManager.createTask(
-                formData.name?.trim() || "",
-                projectId,
-                formData.teamId?.trim() || "",
-                formData.resourceScope || []
+            await projectManager.createTask({
+                name: formData.name?.trim() || "",
+                milestoneId: milestoneId,
+                resourceId: formData.resourceId?.trim() || "",
+                assignedUserIds: formData.assignedUserIds || [],
+                description: formData.description?.trim() || ""
+            }, projectId
               )
         };
             onTaskCreated();
             onClose();
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to create or update task');
+            setError(err instanceof Error ? err.message : 'Failed to create or update Task');
         } finally {
             setIsLoading(false);
         }
@@ -59,10 +62,12 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onTas
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        (name === 'resourceScope')
+        (name === 'assignedUserIds')
         ? setFormData((prev) => ({...prev, [name]: value.split(',').map((e) => e.trim())}))
         : setFormData(prev => ({ ...prev, [name]: value }));
     };
+
+    console.log(currentTaskData)
 
     return (
         <div className="modal-overlay">
@@ -96,6 +101,31 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onTas
                         />
                     </div>
                     <div className="form-group">
+                        <label htmlFor="name">Assign User Ids</label>
+                        <input
+                            type="text"
+                            id="assignedUserIds"
+                            name="assignedUserIds"
+                            value={formData.assignedUserIds}
+                            onChange={handleChange}
+                            required
+                            className="theia-input"
+                        />
+                    </div>
+                    {!currentTaskData && 
+                        <div className="form-group">
+                            <label htmlFor="name">Resource Id</label>
+                            <input
+                                type="text"
+                                id="resourceId"
+                                name="resourceId"
+                                value={formData.resourceId}
+                                onChange={handleChange}
+                                required
+                                className="theia-input"
+                            />
+                        </div>}
+                    <div className="form-group">
                         <label htmlFor="status">Status</label>
                         <select
                             id="status"
@@ -107,18 +137,6 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onTas
                             <option value="open">Active</option>
                             <option value="closed">Inactive</option>
                         </select>
-                    </div>
-                    <div className="form-group">
-                        <label htmlFor="name">Resource Scope</label>
-                        <input
-                            type="text"
-                            id="resourceScope"
-                            name="resourceScope"
-                            value={formData.resourceScope}
-                            onChange={handleChange}
-                            required
-                            className="theia-input"
-                        />
                     </div>
                     {error && <div className="error-message">{error}</div>}
                     <div className="modal-actions">
