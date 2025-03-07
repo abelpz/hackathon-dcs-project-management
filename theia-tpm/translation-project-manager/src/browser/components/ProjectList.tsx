@@ -68,6 +68,12 @@ export const ProjectList: React.FC = () => {
                     >
                         Create Project
                     </button>
+                    <button 
+                        className="theia-button main" 
+                        onClick={() => navigate({type: "milestone-details", projectId: "project-1741286121316-y7yhuubq6", milestoneId: "milestone-1741286372389-3gjz19vf8"})}
+                    >
+                        View Milestone
+                    </button>
                 </div>
                 <button className="theia-button secondary" onClick={logout}>
                     Logout

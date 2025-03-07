@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useProjectManager } from '../contexts/ProjectManagerContext';
 import { useNavigation } from '../contexts/NavigationContext';
+import { Milestone, Project } from '../project-manager';
 
 interface ProjectDetailsProps {
     projectId: string;
@@ -8,9 +9,21 @@ interface ProjectDetailsProps {
 
 export const ProjectDetails: React.FC<ProjectDetailsProps> = ({ projectId }) => {
     const { projectManager } = useProjectManager();
-  const { navigate, goBack } = useNavigation();
+    const { navigate, goBack } = useNavigation();
+    const [ project, setProject ] = useState<Project | null>()
+    const [ milestones, setMilestones ] = useState<Array<Milestone | null>>()
   
-  console.log({navigate, projectManager})
+    useEffect(() => {
+        projectManager?.getProject(projectId).then((data) => setProject(data))
+
+        projectManager?.getMilestonesByProject(projectId).then((data) => setMilestones(data))
+
+    }, [])
+
+    const handleProjectClick = (projectId: string, milestoneId: string) => {
+        navigate({ type: 'milestone-details', projectId, milestoneId });
+    };
+    
 
     return (
         <div className="project-details">
@@ -18,14 +31,27 @@ export const ProjectDetails: React.FC<ProjectDetailsProps> = ({ projectId }) => 
                 <button className="theia-button secondary" onClick={goBack}>
                     ← Back to Projects
                 </button>
-                <h3>Project Details</h3>
+                <h3>{project?.name}</h3>
             </div>
             <div className="details-info">
-                <p>Project ID: {projectId}</p>
+                <p>{project?.description}</p>
             </div>
-            <div className="placeholder-message">
-                Project details coming soon...
-            </div>
+            <h3>Milestones</h3>
+            {!milestones?.length ? (
+                <div className="no-milestones">No milestones found</div>
+            ) : (
+                <div className="milestones-list">
+                    {milestones?.map(milestone => (
+                        <div 
+                            key={milestone?.id} 
+                            className="project-item"
+                            onClick={() => {typeof milestone?.id === 'string' && handleProjectClick(projectId, milestone.id)}}
+                        >
+                            <div className="project-name">{milestone?.name}</div>
+                        </div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 }; 

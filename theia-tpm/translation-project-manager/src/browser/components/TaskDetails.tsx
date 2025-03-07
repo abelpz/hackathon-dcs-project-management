@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useProjectManager } from '../contexts/ProjectManagerContext';
 import { useNavigation } from '../contexts/NavigationContext';
+import { Task } from '../project-manager';
 
 interface TaskDetailsProps {
     projectId: string;
@@ -10,7 +11,12 @@ interface TaskDetailsProps {
 
 export const TaskDetails: React.FC<TaskDetailsProps> = ({ projectId, milestoneId, taskId }) => {
     const { projectManager } = useProjectManager();
-  const { navigate, goBack } = useNavigation();
+    const { navigate, goBack } = useNavigation();
+    const [ task, setTask] = useState<Task | null>();
+
+    useEffect(() => {
+        projectManager?.getTask(taskId).then((data) => setTask(data))
+    }, [])
   
   console.log({projectManager, navigate})
 
@@ -23,12 +29,14 @@ export const TaskDetails: React.FC<TaskDetailsProps> = ({ projectId, milestoneId
                 <h3>Task Details</h3>
             </div>
             <div className="details-info">
+                <h4>{task?.name}</h4>  
                 <p>Project ID: {projectId}</p>
                 <p>Milestone ID: {milestoneId}</p>
                 <p>Task ID: {taskId}</p>
             </div>
             <div className="placeholder-message">
-                Task details coming soon...
+                <p>Description: {task?.description}</p>
+                <p>Status: {task?.status}</p>
             </div>
         </div>
     );

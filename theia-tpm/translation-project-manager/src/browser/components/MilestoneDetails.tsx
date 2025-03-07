@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useProjectManager } from '../contexts/ProjectManagerContext';
 import { useNavigation } from '../contexts/NavigationContext';
+import { Milestone, Task } from '../project-manager';
 
 interface MilestoneDetailsProps {
     projectId: string;
@@ -9,19 +10,32 @@ interface MilestoneDetailsProps {
 
 export const MilestoneDetails: React.FC<MilestoneDetailsProps> = ({ projectId, milestoneId }) => {
     const { projectManager } = useProjectManager();
-    const { navigate, goBack } = useNavigation();
-  
-    if (!projectManager) {
-        return <div>Loading...</div>;
-    }
+    const { goBack, navigate } = useNavigation();
+    const [ milestone, setMilestone ] = useState<Milestone | null>();
+    const [ tasks, setTasks ] = useState<Task[] | null>();
 
-    const milestone = projectManager.getMilestone(projectId);
 
-    if (!milestone) {
-        return <div>Milestone not found</div>;
-  }
-  
-  console.log({projectManager, navigate})
+    useEffect(() => {
+        projectManager?.getMilestone(milestoneId).then((data) => {
+            if ((data?.name !== undefined) || (data?.name !== null)) {
+            setMilestone(data)
+        } else {
+            throw new Error("Milestone no encontrado")
+        }
+        })
+
+        projectManager?.getTasksByMilestone(milestoneId).then((data) => {
+        setTasks(data);
+        })
+
+
+    }, [projectManager])
+
+    const handleProjectClick = (projectId: string, milestoneId: string, taskId: string) => {
+        navigate({ type: 'task-details', projectId, milestoneId, taskId });
+    };
+
+  console.log({tasks})
 
     return (
         <div className="milestone-details">
@@ -29,7 +43,7 @@ export const MilestoneDetails: React.FC<MilestoneDetailsProps> = ({ projectId, m
                 <button className="theia-button secondary" onClick={goBack}>
                     ← Back to Project
                 </button>
-                <h3>Milestone Details</h3>
+                <h3>{milestone?.name}</h3>
             </div>
             <div className="details-info">
                 <p>Project ID: {projectId}</p>
@@ -38,6 +52,22 @@ export const MilestoneDetails: React.FC<MilestoneDetailsProps> = ({ projectId, m
             <div className="placeholder-message">
                 Milestone details coming soon...
             </div>
+            <h3>Tareas</h3>
+            {!tasks?.length ? (
+                <div className="no-tasks">No tasks found</div>
+            ) : (
+                <div className="tasks-list">
+                    {tasks?.map(tasks => (
+                        <div 
+                            key={tasks?.id} 
+                            className="project-item"
+                            onClick={() => {typeof tasks?.id === 'string' && handleProjectClick(projectId, milestoneId, tasks?.id)}}
+                        >
+                            <div className="project-name">{tasks?.name}</div>
+                        </div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 }; 
