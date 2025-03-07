@@ -15,7 +15,7 @@ export const TaskDetails: React.FC<TaskDetailsProps> = ({ projectId, milestoneId
     const [ task, setTask] = useState<Task | null>();
 
     useEffect(() => {
-        projectManager?.getTask(taskId, milestoneId).then((data) => setTask(data))
+        projectManager?.getTask(taskId, milestoneId, projectId).then((data) => setTask(data))
     }, [])
   
   console.log({projectManager, navigate})

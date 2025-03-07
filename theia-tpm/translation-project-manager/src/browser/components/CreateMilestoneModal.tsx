@@ -38,7 +38,7 @@ export const CreateMilestoneModal: React.FC<CreateMilestoneModalProps> = ({ onCl
             teamId: "",
             resourceScope: formData.resourceScope || [],
             status: formData.status as 'open' | 'closed'
-        }
+        }, projectId
           )
         } else {
             await projectManager.createMilestone(

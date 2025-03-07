@@ -16,7 +16,7 @@ export const MilestoneDetails: React.FC<MilestoneDetailsProps> = ({ projectId, m
 
 
     useEffect(() => {
-        projectManager?.getMilestone(milestoneId).then((data) => {
+        projectManager?.getMilestone(milestoneId, projectId).then((data) => {
             if ((data?.name !== undefined) || (data?.name !== null)) {
             setMilestone(data)
         } else {
@@ -24,7 +24,7 @@ export const MilestoneDetails: React.FC<MilestoneDetailsProps> = ({ projectId, m
         }
         })
 
-        projectManager?.getTasksByMilestone(milestoneId).then((data) => {
+        projectManager?.getTasksByMilestone(milestoneId, projectId).then((data) => {
         setTasks(data);
         })
 
