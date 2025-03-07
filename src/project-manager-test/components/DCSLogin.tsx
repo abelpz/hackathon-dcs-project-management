@@ -102,7 +102,7 @@ export function DCSLogin() {
             id="username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+            className="mt-1 block w-full rounded-md border-gray-400 border-1 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base py-2 px-3.5"
             required
           />
         </div>
@@ -115,7 +115,7 @@ export function DCSLogin() {
             id="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+            className="mt-1 block w-full rounded-md border-gray-400 border-1 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base py-2 px-3.5"
             required
           />
         </div>
