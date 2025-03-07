@@ -13,8 +13,9 @@ export const CreateMilestoneModal: React.FC<CreateMilestoneModalProps> = ({ onCl
     const { projectManager } = useProjectManager();
     const [formData, setFormData] = useState<Partial<Milestone>>(currentMilestoneData ?? {
         name: '',
-        projectId: '',
-        status: 'open'
+        description: '',
+        status: 'open',
+        projectId: projectId
     });
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -29,13 +30,12 @@ export const CreateMilestoneModal: React.FC<CreateMilestoneModalProps> = ({ onCl
         try {
             if (currentMilestoneData){
           await projectManager.updateMilestone({
-            
             id: currentMilestoneData.id,
             type: currentMilestoneData.type,
             name: formData.name?.trim() || "",
             description: formData.description?.trim() || "",
-            projectId: formData.projectId?.trim() || "",
-            teamId: "",
+            projectId: projectId,
+            teamId: currentMilestoneData.teamId,
             resourceScope: formData.resourceScope || [],
             status: formData.status as 'open' | 'closed'
         }, projectId
