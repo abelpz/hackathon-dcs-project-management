@@ -5,9 +5,12 @@ import CreateProjectPage from './CreateProjectPage';
 import ProjectItem from './ProjectItem';
 import { ProjectMilestone } from './core/projects';
 import ProjectMilestonePage from './ProjectMilestonePage';
+import CreateMilestonePage from './CreateMilestonePage';
+import CloseButton from './CloseButton';
 
 
-type ProjectState = "list" | "create" | "viewProject" | "viewMilestone";
+export type ProjectState = "list" | "create" | "viewProject" | "viewMilestone" | "createMilestone";
+//type PrevProjectState = "list" | "create" | "viewProject" | "viewMilestone" | "createMilestone";
 
 export type SelectedProject = {
     name: string;
@@ -22,7 +25,7 @@ export type SelectedProject = {
     resources: [
         string
     ];
-}
+};
 
 export default function ProjectPage({ token }: { token: string }) {
 
@@ -30,9 +33,12 @@ export default function ProjectPage({ token }: { token: string }) {
     const [selectedProject, setSelectedProject] = useState<SelectedProject>();
     const [selectedMilestone, setSelectedMilestone] = useState<ProjectMilestone>();
     const [projectState, setProjectState] = useState<ProjectState>("list");
+    const [prevProjectState, setPrevProjectState] = useState<Array<ProjectState>>(["list"]);
+
     const [projectIndex, setProjectIndex] = useState<number>();
     const [projectItemId, setProjectItemId] = useState<number>(0);
     const [milestoneIndex, setMilestoneIndex] = useState<number>();
+
 
     useEffect(() => {
 
@@ -43,14 +49,48 @@ export default function ProjectPage({ token }: { token: string }) {
         }
     }, [projectState]);
 
+/*     const setCurrentState = (newState: ProjectState) => {
+        if (projectState !== newState){
+            setPrevProjectState(projectState); 
+            (setProjectState(newState));
+        }
+    };
+ */
+
+    const setCurrentState = (state: ProjectState) => {
+
+        setPrevProjectState((prevProjectState) => [...prevProjectState, state])
+
+        if (prevProjectState ) {
+            const newState = [...prevProjectState, state]
+            const tempState = newState[newState.length -1]
+            setProjectState(tempState)
+        }
+    };
+
+    const setPrevState = () => {
+        if (prevProjectState){
+            const newState = prevProjectState.slice(0, -1)
+            setPrevProjectState(newState)
+            setProjectState(newState[newState.length -1])
+        }
+    };
 
     return (
         <>
-            <button onClick={() => { !(projectState === "create") ? setProjectState("create") : setProjectState("list") }}>Crear Proyecto</button>
-            {projectState === "list" && <ul>{projects?.projects.map((data, id) => <button onClick={() => { setProjectState("viewProject"); setProjectIndex(id) }}><li key={id}>{`${data.name}`}</li></button>)}</ul>}
+            <CloseButton setState={setPrevState}/>
+
+            {projectState === "list" && <button onClick={() => { setCurrentState("create") }}>New Project</button>}
+            
+            {projectState === "list" && <ul>{projects?.projects.map((data, id) => <button key={id} onClick={() => { setCurrentState("viewProject"); setProjectIndex(id) }}><li key={id}>{`${data.name}`}</li></button>)}</ul>}
+
             {projectState === "create" && <CreateProjectPage token={token} />}
-            {(projectState === "viewProject" && projectIndex !== undefined && selectedProject) && <ProjectItem selectedProject={selectedProject} setSelectedMilestone={setSelectedMilestone} projectState={projectState} setProjectState={setProjectState} setMilestoneIndex={setMilestoneIndex} />}
-            {(projectState === "viewMilestone" && milestoneIndex !== undefined && selectedMilestone) && <ProjectMilestonePage selectedMilestone={selectedMilestone} />}
+
+            {(projectState === "viewProject" && projectIndex !== undefined && selectedProject) && <ProjectItem selectedProject={selectedProject} setSelectedMilestone={setSelectedMilestone} projectState={projectState} setProjectState={setCurrentState} setMilestoneIndex={setMilestoneIndex} />}
+
+            {(projectState === "viewMilestone" && milestoneIndex !== undefined && selectedMilestone) && <ProjectMilestonePage selectedMilestone={selectedMilestone} token={token} />}
+
+            {projectState === "createMilestone" && <CreateMilestonePage token={token} />}
         </>
     )
 }

@@ -1,0 +1,249 @@
+.project-manager-widget {
+    padding: 20px;
+    height: 100%;
+    overflow-y: auto;
+}
+
+.project-manager-widget .main-screen {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.project-manager-widget .screen-header {
+    padding: 10px 0;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--theia-editorWidget-border);
+}
+
+.project-manager-widget .screen-content {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.project-manager-widget .details-info {
+    background-color: var(--theia-editor-background);
+    border: 1px solid var(--theia-editorWidget-border);
+    border-radius: 4px;
+    padding: 15px;
+    margin: 15px 0;
+}
+
+.project-manager-widget .details-info p {
+    margin: 5px 0;
+    color: var(--theia-descriptionForeground);
+}
+
+.project-manager-widget .placeholder-message {
+    text-align: center;
+    padding: 20px;
+    color: var(--theia-descriptionForeground);
+    font-style: italic;
+}
+
+.project-manager-widget .login-container {
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.project-manager-widget .form-group {
+    margin-bottom: 15px;
+}
+
+.project-manager-widget .form-group label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.project-manager-widget .form-group input,
+.project-manager-widget .form-group textarea,
+.project-manager-widget .form-group select {
+    width: 100%;
+    padding: 8px;
+}
+
+.project-manager-widget .loading-indicator {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100px;
+}
+
+.project-manager-widget .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--theia-editor-background);
+    border-top: 4px solid var(--theia-activityBar-activeBorder);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.project-manager-widget .hidden {
+    display: none !important;
+}
+
+.project-manager-widget .organization-list {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.project-manager-widget .organization-item {
+    padding: 15px;
+    margin-bottom: 10px;
+    background-color: var(--theia-editor-background);
+    border: 1px solid var(--theia-editorWidget-border);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.project-manager-widget .organization-item:hover {
+    background-color: var(--theia-list-hoverBackground);
+}
+
+.project-manager-widget .org-name {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.project-manager-widget .org-username {
+    color: var(--theia-descriptionForeground);
+    font-size: 0.9em;
+}
+
+.project-manager-widget .project-manager-container {
+    height: 100%;
+}
+
+.project-manager-widget .project-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.project-manager-widget .header-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.project-manager-widget .projects-list {
+    display: grid;
+    gap: 10px;
+}
+
+.project-manager-widget .project-item {
+    padding: 15px;
+    background-color: var(--theia-editor-background);
+    border: 1px solid var(--theia-editorWidget-border);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.project-manager-widget .project-item:hover {
+    background-color: var(--theia-list-hoverBackground);
+}
+
+.project-manager-widget .project-name {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.project-manager-widget .project-status {
+    font-size: 0.9em;
+    padding: 2px 8px;
+    border-radius: 10px;
+    display: inline-block;
+}
+
+.project-manager-widget .project-status.active {
+    background-color: var(--theia-successBackground);
+    color: var(--theia-success-foreground);
+}
+
+.project-manager-widget .project-status.inactive {
+    background-color: var(--theia-errorBackground);
+    color: var(--theia-error-foreground);
+}
+
+.project-manager-widget .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.project-manager-widget .modal-content {
+    background-color: var(--theia-editor-background);
+    border: 1px solid var(--theia-editorWidget-border);
+    border-radius: 4px;
+    padding: 20px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.project-manager-widget .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.project-manager-widget .close-button {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--theia-editor-foreground);
+}
+
+.project-manager-widget .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.project-manager-widget .error-message {
+    color: var(--theia-errorForeground);
+    margin: 10px 0;
+    padding: 10px;
+    border: 1px solid var(--theia-errorBorder);
+    border-radius: 4px;
+    background-color: var(--theia-errorBackground);
+}
+
+.project-manager-widget .details-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--theia-editorWidget-border);
+}
+
+.project-manager-widget .details-header h3 {
+    margin: 0;
+}
+
+.project-manager-widget .details-header button {
+    padding: 5px 10px;
+    font-size: 0.9em;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+} 

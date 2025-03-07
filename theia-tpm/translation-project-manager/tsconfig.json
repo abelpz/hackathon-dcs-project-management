@@ -1,0 +1,32 @@
+{
+    "compilerOptions": {
+        "strict": true,
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "noImplicitAny": true,
+        "noEmitOnError": true,
+        "noImplicitThis": true,
+        "noUnusedLocals": true,
+        "strictNullChecks": true,
+        "strictPropertyInitialization": false,
+        "useDefineForClassFields": false,
+        "sourceMap": true,
+        "declaration": true,
+        "skipLibCheck": true,
+        "jsx": "react",
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "target": "ES2017",
+        "lib": [
+            "ES2017",
+            "DOM"
+        ],
+        "rootDir": "src",
+        "outDir": "lib",
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true
+    },
+    "include": [
+        "src"
+    ]
+}

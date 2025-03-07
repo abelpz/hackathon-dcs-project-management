@@ -20,32 +20,54 @@ import { PROJECTS_REPO_ORG, PROJECTS_REPO_NAME } from "./constants";
 import { createMilestone, updateMilestone, closeMilestone } from "./milestone";
 import { Issue, getAllMilestoneIssues, createIssue, CreateIssueOptions, updateIssue } from './issues';
 
-// Resource Types
-export type ResourceType = 'organization' | 'project' | 'milestone' | 'task';
-
-export interface Resource {
+// Domain Types
+export interface Organization {
   id: string;
-  type: ResourceType;
+  type: 'organization';
   name: string;
 }
 
-export interface OrganizationResource extends Resource {
-  type: 'organization';
-}
-
-export interface ProjectResource extends Resource {
+export interface Project {
+  id: string;
   type: 'project';
-  organizationResourceId: string;
+  name: string;
+  organizationId: string;
+  resourceScope: string[]; // IDs of organization resources that can be affected by this project
 }
 
-export interface MilestoneResource extends Resource {
+export interface Milestone {
+  id: string;
   type: 'milestone';
-  projectResourceId: string;
+  name: string;
+  projectId: string;
+  resourceScope: string[]; // Subset of project resource IDs that can be affected by this milestone
 }
 
-export interface TaskResource extends Resource {
+export interface Task {
+  id: string;
   type: 'task';
-  milestoneResourceId: string;
+  name: string;
+  milestoneId: string;
+  resourceId: string; // ID of the single resource from milestone scope that this task affects
+  status: 'open' | 'closed';
+  description?: string;
+}
+
+// Translation Resource Types
+export interface Resource {
+  id: string;
+  type: 'resource';
+  name: string;
+  path: string;
+  projectId: string;
+}
+
+export interface MilestoneResource {
+  id: string;
+  type: 'milestone-resource';
+  name: string;
+  path: string;
+  milestoneId: string;
 }
 
 // Resource Validation Functions
@@ -128,7 +150,7 @@ type DCSMilestoneMapping = {
   milestoneId: string;
 };
 
-export type ProjectMilestone = {
+type ProjectMilestone = {
   id?: string;  // Optional for creation, will be generated
   name: string;
   description?: string;
@@ -175,197 +197,161 @@ export type ProjectList = {
   lastUpdated: string;
 }
 
-// Utility Functions
-const getFormattedJsonString = (object: object) => {
-  return JSON.stringify(object, null, 2);
+interface ProjectCache {
+  data: ProjectList | ProjectDetailsMap;
+  timestamp: number;
+  version: string;
+  type: 'summary' | 'full';
 }
 
-export async function deleteFileInRepo(repoName: string, fileSha: string, orgName: string, token: string, path: string): Promise<boolean> {
-  const response = await fetch(`https://qa.door43.org/api/v1/repos/${orgName}/${repoName}/contents/${path}`, {
-    method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify({
-      sha: fileSha
-    })
-  });
-  if (!response.ok) {
-    throw new Error(`Failed to delete file: ${response.status} ${response.statusText}`);
-  }
-  return true;
+interface ProjectDetailsMap {
+  projects: {[key: string]: ProcessedProjectData};
+  lastUpdated: string;
 }
 
-export async function createFileInRepo(repoName: string, orgName: string, token: string, path: string, content: string): Promise<FileContentResponse> {
-  const encodedContent = btoa(content);
-  const response = await fetch(`https://qa.door43.org/api/v1/repos/${orgName}/${repoName}/contents/${path}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify({
-      content: encodedContent,
-      message: `Create ${path}`
-    })
-  });
+const PROJECT_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+let projectListCache: ProjectCache | null = null;
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error((errorData as ErrorResponse).message || `Failed to create file: ${response.status}`);
-  }
-
-  const data = await response.json();
-  return data as FileContentResponse;
+async function getCacheVersion(): Promise<string> {
+  const response = await fetch(`https://qa.door43.org/api/v1/repos/${PROJECTS_REPO_ORG}/${PROJECTS_REPO_NAME}/commits?limit=1`);
+  if (!response.ok) return Date.now().toString();
+  const commits = await response.json();
+  return commits[0]?.sha || Date.now().toString();
 }
 
-export async function updateFileInRepo(repoName: string, orgName: string, token: string, path: string, content: string, sha: string): Promise<FileContentResponse> {
-  const encodedContent = btoa(content);
-  const response = await fetch(`https://qa.door43.org/api/v1/repos/${orgName}/${repoName}/contents/${path}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify({
-      content: encodedContent,
-      message: `Update ${path}`,
-      sha: sha
-    })
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error((errorData as ErrorResponse).message || `Failed to update file: ${response.status}`);
-  }
-
-  const data = await response.json();
-  return data as FileContentResponse;
-}
-
-export async function createRepoInOrg(repoName: string, orgName: string, token: string): Promise<Repository> {
-  const response = await fetch(`https://qa.door43.org/api/v1/orgs/${orgName}/repos`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'accept': 'application/json',
-      'authorization': `Bearer ${token}`
-    },
-    body: getFormattedJsonString({
-      name: repoName
-    })
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error((errorData as ErrorResponse).message || `Failed to create repository: ${response.status}`);
-  }
-
-  const data = await response.json();
-  console.log({ data });
-  return data as Repository;
-}
-
-// Project Management Functions
-export async function checkProjectsRepoExists(): Promise<boolean> {
-  const response = await fetch(`https://qa.door43.org/api/v1/repos/${PROJECTS_REPO_ORG}/${PROJECTS_REPO_NAME}`);
-  if (response.status === 404) {
-    return false;
-  }
-  if (response.status === 200) {
-    return true;
-  }
-  throw new Error(`Failed to check projects repo exists: ${response.status} ${response.statusText}`);
-}
-
-export async function createProjectsFolder(token: string): Promise<FileContentResponse> {
-  try {
-    // Create a README.md file in the folder to implicitly create the directory
-    const content = 'This folder contains project definitions.';
-    const response = await createFileInRepo(PROJECTS_REPO_NAME, PROJECTS_REPO_ORG, token, 'projects/README.md', content);
-    console.log(`Created folder projects in ${PROJECTS_REPO_ORG}/${PROJECTS_REPO_NAME}`);
-    return response;
-  } catch (error) {
-    console.error(`Error creating folder in repository:`, error);
-    throw error;
-  }
-}
-
-export async function createProjectsRepo(token: string): Promise<Repository> {
-  try {
-    const repoResponse = await createRepoInOrg(PROJECTS_REPO_NAME, PROJECTS_REPO_ORG, token);
-
-    if (repoResponse && repoResponse.id) {
-      // Successfully created repository, now create the projects folder
-      await createProjectsFolder(token);
-      console.log('Repository and projects folder created successfully');
-      return repoResponse;
-    } else {
-      throw new Error('Failed to create repository: Invalid response');
+export async function getProjects(
+  status: 'active' | 'completed' | 'archived' | 'all' = 'all',
+  useCache: boolean = true,
+  includeFull: boolean = false
+): Promise<ProjectList | ProjectDetailsMap> {
+  // Check cache if enabled
+  if (useCache && projectListCache) {
+    const now = Date.now();
+    const cacheAge = now - projectListCache.timestamp;
+    
+    if (cacheAge < PROJECT_CACHE_TTL && projectListCache.type === (includeFull ? 'full' : 'summary')) {
+      // Cache is still valid and matches the requested type
+      if (!includeFull) {
+        const data = projectListCache.data as ProjectList;
+        const filteredProjects = status === 'all' 
+          ? data.projects
+          : data.projects.filter(p => p.folder === status);
+          
+        return {
+          projects: filteredProjects,
+          lastUpdated: data.lastUpdated
+        };
+      }
+      return projectListCache.data as ProjectDetailsMap;
     }
-  } catch (error) {
-    console.error('Error in createProjectsRepo:', error);
-    throw error;
   }
-}
 
-export async function checkProjectExists(projectName: string): Promise<boolean> {
-  const projectFolders = ['active', 'completed', 'archived'];
-  for (const folder of projectFolders) {
+  if (!includeFull) {
+    // Fetch summary data from project-list.json
     try {
-      const response = await fetch(`https://qa.door43.org/api/v1/repos/${PROJECTS_REPO_ORG}/${PROJECTS_REPO_NAME}/contents/projects/${folder}/${projectName}.json`);
-      if (response.status === 200) {
-        return true;
+      const response = await fetch(`https://qa.door43.org/api/v1/repos/${PROJECTS_REPO_ORG}/${PROJECTS_REPO_NAME}/contents/projects/project-list.json`);
+      if (response.ok) {
+        const file = await response.json() as FileContentResponse;
+        const projectList = JSON.parse(atob(file.content)) as ProjectList;
+        
+        // Filter projects based on status
+        const filteredProjects = status === 'all' 
+          ? projectList.projects
+          : projectList.projects.filter(p => p.folder === status);
+
+        const result = {
+          projects: filteredProjects,
+          lastUpdated: projectList.lastUpdated
+        };
+
+        // Update cache if enabled
+        if (useCache) {
+          projectListCache = {
+            data: result,
+            timestamp: Date.now(),
+            version: await getCacheVersion(),
+            type: 'summary'
+          };
+        }
+
+        return result;
       }
     } catch (error) {
-      console.error(`Error checking project exists: ${error}`);
-    }
-  }
-  return false;
-}
-
-export async function getProjects(): Promise<ProjectList> {
-  const projectFolders = ['active', 'completed', 'archived'];
-  const projects: ProjectSummary[] = [];
-
-  for (const folder of projectFolders) {
-    const response = await fetch(`https://qa.door43.org/api/v1/repos/${PROJECTS_REPO_ORG}/${PROJECTS_REPO_NAME}/contents/projects/${folder}`);
-    if (response.ok) {
-      const files = await response.json() as FileContentResponse[];
-      for (const file of files) {
-        if (file.name.endsWith('.json') && file.name !== 'project-list.json') {
-          try {
-            const projectResponse = await fetch(file.download_url);
-            if (projectResponse.ok) {
-              const projectData = await projectResponse.json() as ProjectData;
-              projects.push({
-                name: projectData.name,
-                status: projectData.status,
-                folder: folder
-              });
-            }
-          } catch (error) {
-            console.error(`Error reading project file ${file.name}:`, error);
-          }
-        }
-      }
+      console.error('Error fetching project-list.json:', error);
+      // Fall through to fetching individual files if project-list.json fails
     }
   }
 
-  const projectList: ProjectList = {
-    projects,
+  // Fetch full project data from individual files
+  const projectDetailsMap: ProjectDetailsMap = {
+    projects: {},
     lastUpdated: new Date().toISOString()
   };
 
-  return projectList;
+  let projectFolders: string[];
+  if (status === 'all') {
+    projectFolders = ['active', 'completed', 'archived'];
+  } else {
+    projectFolders = [status];
+  }
+
+  // Process folders in parallel
+  const folderPromises = projectFolders.map(async (folder) => {
+    const response = await fetch(`https://qa.door43.org/api/v1/repos/${PROJECTS_REPO_ORG}/${PROJECTS_REPO_NAME}/contents/projects/${folder}`);
+    if (!response.ok) return;
+
+    const files = await response.json() as FileContentResponse[];
+    const projectFiles = files.filter(file => 
+      file.name.endsWith('.json') && file.name !== 'project-list.json'
+    );
+
+    // Process files in batches to avoid overwhelming the server
+    const batchSize = 5;
+    for (let i = 0; i < projectFiles.length; i += batchSize) {
+      const batch = projectFiles.slice(i, i + batchSize);
+      const batchPromises = batch.map(async (file) => {
+        try {
+          const projectResponse = await fetch(file.download_url);
+          if (!projectResponse.ok) return;
+
+          const projectData = await projectResponse.json() as ProcessedProjectData;
+          projectDetailsMap.projects[projectData.name] = projectData;
+        } catch (error) {
+          console.error(`Error reading project file ${file.name}:`, error);
+        }
+      });
+
+      await Promise.all(batchPromises);
+
+      // Add a small delay between batches to prevent rate limiting
+      if (i + batchSize < projectFiles.length) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    }
+  });
+
+  await Promise.all(folderPromises);
+
+  // Update cache if enabled
+  if (useCache) {
+    projectListCache = {
+      data: projectDetailsMap,
+      timestamp: Date.now(),
+      version: await getCacheVersion(),
+      type: 'full'
+    };
+  }
+
+  return projectDetailsMap;
+}
+
+export async function invalidateProjectCache(): Promise<void> {
+  projectListCache = null;
 }
 
 async function updateProjectList(token: string): Promise<FileContentResponse> {
-  const projectList = await getProjects();
+  await invalidateProjectCache(); // Invalidate cache before updating
+  const projectList = await getProjects('all', false); // Force fresh data
   const projectListContent = getFormattedJsonString(projectList);
 
   try {
@@ -392,42 +378,68 @@ export async function createProject(token: string, projectData: ProjectData): Pr
 
   // Process the milestones to add IDs and create DCS mappings
   const processedMilestones: ProcessedProjectMilestone[] = [];
-
-  for (const milestone of projectData.milestones) {
-    // Validate milestone resources
-    if (!validateMilestoneResources(milestone.resources, projectData.resources)) {
-      throw new Error(`Milestone ${milestone.name} resources must be a subset of project resources`);
-    }
-
-    const newMilestone: ProcessedProjectMilestone = {
-      ...milestone,
-      id: `milestone-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      status: 'open',
-      dcsMapping: []
-    };
-
-    // Create the milestone in each associated repository
-    for (const repoName of milestone.resources) {
-      try {
-        const dcsResponse = await createMilestone(
-          PROJECTS_REPO_ORG,
-          repoName,
-          milestone.name,
-          token
-        );
-
-        // Add the mapping to the milestone
-        newMilestone.dcsMapping.push({
-          repoName,
-          milestoneId: dcsResponse.id.toString()
-        });
-      } catch (error) {
-        console.error(`Failed to create milestone in repo ${repoName}:`, error);
-        // Continue with other repos even if one fails
+  
+  // Process milestones in batches
+  const batchSize = 3; // Adjust based on API limits
+  for (let i = 0; i < projectData.milestones.length; i += batchSize) {
+    const milestoneBatch = projectData.milestones.slice(i, i + batchSize);
+    
+    const batchPromises = milestoneBatch.map(async (milestone) => {
+      // Validate milestone resources
+      if (!validateMilestoneResources(milestone.resources, projectData.resources)) {
+        throw new Error(`Milestone ${milestone.name} resources must be a subset of project resources`);
       }
-    }
 
-    processedMilestones.push(newMilestone);
+      const newMilestone: ProcessedProjectMilestone = {
+        ...milestone,
+        id: `milestone-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        status: 'open',
+        dcsMapping: []
+      };
+
+      // Create milestones in repositories in parallel with rate limiting
+      const repoBatchSize = 3;
+      for (let j = 0; j < milestone.resources.length; j += repoBatchSize) {
+        const repoBatch = milestone.resources.slice(j, j + repoBatchSize);
+        const repoPromises = repoBatch.map(async (repoName) => {
+          try {
+            const dcsResponse = await createMilestone(
+              PROJECTS_REPO_ORG,
+              repoName,
+              milestone.name,
+              token
+            );
+
+            return {
+              repoName,
+              milestoneId: dcsResponse.id.toString()
+            };
+          } catch (error) {
+            console.error(`Failed to create milestone in repo ${repoName}:`, error);
+            return null;
+          }
+        });
+
+        const mappingResults = await Promise.all(repoPromises);
+        const validMappings = mappingResults.filter((mapping): mapping is DCSMilestoneMapping => mapping !== null);
+        newMilestone.dcsMapping.push(...validMappings);
+
+        // Add delay between repository batches
+        if (j + repoBatchSize < milestone.resources.length) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+      }
+
+      return newMilestone;
+    });
+
+    const batchResults = await Promise.all(batchPromises);
+    processedMilestones.push(...batchResults);
+
+    // Add delay between milestone batches
+    if (i + batchSize < projectData.milestones.length) {
+      await new Promise(resolve => setTimeout(resolve, 200));
+    }
   }
 
   // Update the project data with processed milestones
@@ -938,6 +950,158 @@ export async function deleteProject(token: string, projectName: string): Promise
 export type {
   ProjectData,
   ProcessedProjectData,
-  ProjectMilestone,
   ProcessedProjectMilestone
 };
+
+// Utility Functions
+const getFormattedJsonString = (object: object) => {
+  return JSON.stringify(object, null, 2);
+}
+
+export async function deleteFileInRepo(repoName: string, fileSha: string, orgName: string, token: string, path: string): Promise<boolean> {
+  const response = await fetch(`https://qa.door43.org/api/v1/repos/${orgName}/${repoName}/contents/${path}`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      sha: fileSha
+    })
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to delete file: ${response.status} ${response.statusText}`);
+  }
+  return true;
+}
+
+export async function createFileInRepo(repoName: string, orgName: string, token: string, path: string, content: string): Promise<FileContentResponse> {
+  const encodedContent = btoa(content);
+  const response = await fetch(`https://qa.door43.org/api/v1/repos/${orgName}/${repoName}/contents/${path}`, {
+    method: 'POST',
+    headers: { 
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      content: encodedContent,
+      message: `Create ${path}`
+    })
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error((errorData as ErrorResponse).message || `Failed to create file: ${response.status}`);
+  }
+
+  const data = await response.json();
+  return data as FileContentResponse;
+}
+
+export async function updateFileInRepo(repoName: string, orgName: string, token: string, path: string, content: string, sha: string): Promise<FileContentResponse> {
+  const encodedContent = btoa(content);
+  const response = await fetch(`https://qa.door43.org/api/v1/repos/${orgName}/${repoName}/contents/${path}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      content: encodedContent,
+      message: `Update ${path}`,
+      sha: sha
+    })
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error((errorData as ErrorResponse).message || `Failed to update file: ${response.status}`);
+  }
+
+  const data = await response.json();
+  return data as FileContentResponse;
+}
+
+export async function createRepoInOrg(repoName: string, orgName: string, token: string): Promise<Repository> {
+  const response = await fetch(`https://qa.door43.org/api/v1/orgs/${orgName}/repos`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'accept': 'application/json',
+      'authorization': `Bearer ${token}`
+    },
+    body: getFormattedJsonString({
+      name: repoName
+    })
+  });
+  
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error((errorData as ErrorResponse).message || `Failed to create repository: ${response.status}`);
+  }
+  
+  const data = await response.json();
+  console.log({data});
+  return data as Repository;
+}
+
+// Project Management Functions
+export async function checkProjectsRepoExists(): Promise<boolean> {
+  const response = await fetch(`https://qa.door43.org/api/v1/repos/${PROJECTS_REPO_ORG}/${PROJECTS_REPO_NAME}`);
+  if (response.status === 404) {
+    return false;
+  }
+  if (response.status === 200) {
+    return true;
+  }
+  throw new Error(`Failed to check projects repo exists: ${response.status} ${response.statusText}`);
+}
+
+export async function createProjectsFolder(token: string): Promise<FileContentResponse> {
+  try {
+    // Create a README.md file in the folder to implicitly create the directory
+    const content = 'This folder contains project definitions.';
+    const response = await createFileInRepo(PROJECTS_REPO_NAME, PROJECTS_REPO_ORG, token, 'projects/README.md', content);
+    console.log(`Created folder projects in ${PROJECTS_REPO_ORG}/${PROJECTS_REPO_NAME}`);
+    return response;
+  } catch (error) {
+    console.error(`Error creating folder in repository:`, error);
+    throw error;
+  }
+}
+
+export async function createProjectsRepo(token: string): Promise<Repository> {
+  try {
+    const repoResponse = await createRepoInOrg(PROJECTS_REPO_NAME, PROJECTS_REPO_ORG, token);
+    
+    if (repoResponse && repoResponse.id) {
+      // Successfully created repository, now create the projects folder
+      await createProjectsFolder(token);
+      console.log('Repository and projects folder created successfully');
+      return repoResponse;
+    } else {
+      throw new Error('Failed to create repository: Invalid response');
+    }
+  } catch (error) {
+    console.error('Error in createProjectsRepo:', error);
+    throw error;
+  }
+}
+
+export async function checkProjectExists(projectName: string): Promise<boolean> {
+  const projectFolders = ['active', 'completed', 'archived'];
+  for (const folder of projectFolders) {
+    try {
+      const response = await fetch(`https://qa.door43.org/api/v1/repos/${PROJECTS_REPO_ORG}/${PROJECTS_REPO_NAME}/contents/projects/${folder}/${projectName}.json`);
+      if (response.status === 200) {
+        return true;
+      }
+    } catch (error) {
+      console.error(`Error checking project exists: ${error}`);
+    }
+  }
+  return false;
+}
