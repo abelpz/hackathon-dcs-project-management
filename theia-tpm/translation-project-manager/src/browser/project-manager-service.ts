@@ -26,7 +26,6 @@ export class ProjectManagerServiceImpl implements ProjectManagerService {
             organizationId,
             token
         });
-      console.log("INITIALIZING");
         await this.projectManager.initialize();
     }
 

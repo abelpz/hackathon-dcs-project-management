@@ -137,7 +137,7 @@ export class ProjectManager {
   async deleteMilestone(id: string): Promise<void> {
     // First, delete all related tasks
     const tasks = await this.getTasksByMilestone(id);
-    await Promise.all(tasks.map(task => this.deleteTask(task.id)));
+    await Promise.all(tasks.map(task => this.deleteTask(task.id, id)));
     
     // Then delete the milestone
     await this.storageService.deleteMilestone(id);
@@ -175,16 +175,16 @@ export class ProjectManager {
     return this.storageService.createTask(input);
   }
 
-  async getTask(id: string): Promise<Task | null> {
-    return this.storageService.getTask(id);
+  async getTask(id: string, milestoneId: string): Promise<Task | null> {
+    return this.storageService.getTask(id, milestoneId);
   }
 
-  async updateTask(task: Task): Promise<Task> {
-    return this.storageService.updateTask(task);
+  async updateTask(task: Task, milestoneId: string): Promise<Task> {
+    return this.storageService.updateTask(task, milestoneId);
   }
 
-  async deleteTask(id: string): Promise<void> {
-    await this.storageService.deleteTask(id);
+  async deleteTask(id: string, milestoneId: string): Promise<void> {
+    await this.storageService.deleteTask(id, milestoneId);
   }
 
   async getAllTasks(): Promise<Task[]> {
