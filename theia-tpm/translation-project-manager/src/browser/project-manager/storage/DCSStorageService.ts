@@ -1297,25 +1297,22 @@ export class DCSStorageService implements IStorageService {
     }
   }
 
-  async getMilestone(id: string): Promise<Milestone | null> {
+  async getMilestone(id: string, projectId: string): Promise<Milestone | null> {
     try {
       this.validateOrganizationId();
       // Find the milestone in project metadata
-      const projects = await this.getAllProjects();
-      for (const project of projects) {
-        const projectData = await this.getProcessedProjectData(project.id);
-        const milestone = projectData.milestones.find(m => m.id === id);
-        if (milestone) {
-          return {
-            id: milestone.id,
-            type: 'milestone',
-            name: milestone.name,
-            projectId: project.id,
-            teamId: milestone.teamId,
-            resourceScope: milestone.resources,
-            status: milestone.status
-          };
-        }
+      const projectData = await this.getProcessedProjectData(projectId);
+      const milestone = projectData.milestones.find(m => m.id === id);
+      if (milestone) {
+        return {
+          id: milestone.id,
+          type: 'milestone',
+          name: milestone.name,
+          projectId: projectId,
+          teamId: milestone.teamId,
+          resourceScope: milestone.resources,
+          status: milestone.status
+        };
       }
       return null;
     } catch (error) {
@@ -1351,11 +1348,11 @@ export class DCSStorageService implements IStorageService {
     }
   }
 
-  async deleteMilestone(id: string): Promise<void> {
+  async deleteMilestone(id: string, projectId: string): Promise<void> {
     try {
       this.validateOrganizationId();
       // First get the milestone to get its project ID and mappings
-      const milestone = await this.getMilestone(id);
+      const milestone = await this.getMilestone(id, projectId);
       if (!milestone) return;
 
       // Get milestone mappings
@@ -1457,12 +1454,12 @@ export class DCSStorageService implements IStorageService {
   }
 
   // Task operations
-  async createTask(input: CreateTaskInput): Promise<Task> {
+  async createTask(input: CreateTaskInput, projectId: string): Promise<Task> {
     try {
       this.validateOrganizationId();
       this.validateTaskInput(input);
       // Get the milestone to get its project ID
-      const milestone = await this.getMilestone(input.milestoneId);
+      const milestone = await this.getMilestone(input.milestoneId, projectId);
       if (!milestone) {
         throw new Error(`Milestone ${input.milestoneId} not found`);
       }
@@ -1492,7 +1489,7 @@ export class DCSStorageService implements IStorageService {
         type: 'task',
         name: dcsIssue.title,
         milestoneId: input.milestoneId,
-        assignedUserIds: dcsIssue.assignees.map(a => a.id.toString()),
+        assignedUserIds: dcsIssue.assignees?.map(a => a.id.toString()) || [],
         resourceId: input.resourceId,
         status: dcsIssue.state === 'closed' ? 'closed' : 'open',
         description: dcsIssue.body
@@ -1504,12 +1501,12 @@ export class DCSStorageService implements IStorageService {
     }
   }
 
-  async getTask(id: string, milestoneId: string): Promise<Task | null> {
+  async getTask(id: string, milestoneId: string, projectId: string): Promise<Task | null> {
     try {
       this.validateOrganizationId();
       // Since tasks are stored as issues in resource repositories,
       // we need to search through all resources in the organization
-      const milestone = await this.getMilestone(milestoneId);
+      const milestone = await this.getMilestone(milestoneId, projectId);
       
       for (const resource of milestone?.resourceScope || []) {
         try {
@@ -1541,7 +1538,7 @@ export class DCSStorageService implements IStorageService {
               type: 'task',
               name: dcsIssue.title,
               milestoneId,
-              assignedUserIds: dcsIssue.assignees.map(a => a.id.toString()),
+              assignedUserIds: dcsIssue.assignees?.map(a => a.id.toString()) || [],
               resourceId: resource,
               status: dcsIssue.state === 'closed' ? 'closed' : 'open',
               description: dcsIssue.body
@@ -1562,11 +1559,11 @@ export class DCSStorageService implements IStorageService {
     }
   }
 
-  async updateTask(task: Task): Promise<Task> {
+  async updateTask(task: Task, projectId: string): Promise<Task> {
     try {
       this.validateOrganizationId();
       // Get the milestone to get its project ID
-      const milestone = await this.getMilestone(task.milestoneId);
+      const milestone = await this.getMilestone(task.milestoneId, projectId);
       if (!milestone) {
         throw new Error(`Milestone ${task.milestoneId} not found`);
       }
@@ -1600,9 +1597,9 @@ export class DCSStorageService implements IStorageService {
     }
   }
 
-  async deleteTask(id: string, milestoneId: string): Promise<void> {
+  async deleteTask(id: string, milestoneId: string, projectId: string): Promise<void> {
     try {
-      const task = await this.getTask(id, milestoneId);
+      const task = await this.getTask(id, milestoneId, projectId);
       if (!task) return;
 
       // Close issue in the resource repository (GitHub API doesn't allow deleting issues)
@@ -1665,7 +1662,7 @@ export class DCSStorageService implements IStorageService {
                   type: 'task',
                   name: dcsIssue.title,
                   milestoneId,
-                  assignedUserIds: dcsIssue.assignees.map(a => a.id.toString()),
+                  assignedUserIds: dcsIssue.assignees?.map(a => a.id.toString()) || [],
                   resourceId: resource.name,
                   status: dcsIssue.state === 'closed' ? 'closed' : 'open',
                   description: dcsIssue.body
@@ -1707,9 +1704,9 @@ export class DCSStorageService implements IStorageService {
     }
   }
 
-  async getTasksByMilestone(milestoneId: string): Promise<Task[]> {
+  async getTasksByMilestone(milestoneId: string, projectId: string): Promise<Task[]> {
     try {
-      const milestone = await this.getMilestone(milestoneId);
+      const milestone = await this.getMilestone(milestoneId, projectId);
       if (!milestone) {
         throw new Error(`Milestone ${milestoneId} not found`);
       }
@@ -1799,7 +1796,7 @@ export class DCSStorageService implements IStorageService {
                 type: 'task',
                 name: dcsIssue.title,
                 milestoneId,
-                assignedUserIds: dcsIssue.assignees.map(a => a.id.toString()),
+                assignedUserIds: dcsIssue.assignees?.map(a => a.id.toString()) || [],
                 resourceId: resource.name,
                 status: dcsIssue.state === 'closed' ? 'closed' : 'open',
                 description: dcsIssue.body

@@ -87,7 +87,7 @@ export class ProjectManager {
   async deleteProject(id: string): Promise<void> {
     // First, delete all related milestones
     const milestones = await this.getMilestonesByProject(id);
-    await Promise.all(milestones.map(milestone => this.deleteMilestone(milestone.id)));
+    await Promise.all(milestones.map(milestone => this.deleteMilestone(milestone.id, id)));
     
     // Then delete the project
     await this.storageService.deleteProject(id);
@@ -126,21 +126,21 @@ export class ProjectManager {
     return this.storageService.createMilestone(input);
   }
 
-  async getMilestone(id: string): Promise<Milestone | null> {
-    return this.storageService.getMilestone(id);
+  async getMilestone(id: string, projectId: string): Promise<Milestone | null> {
+    return this.storageService.getMilestone(id, projectId);
   }
 
-  async updateMilestone(milestone: Milestone): Promise<Milestone> {
-    return this.storageService.updateMilestone(milestone);
+  async updateMilestone(milestone: Milestone, projectId: string): Promise<Milestone> {
+    return this.storageService.updateMilestone(milestone, projectId);
   }
 
-  async deleteMilestone(id: string): Promise<void> {
+  async deleteMilestone(id: string, projectId: string): Promise<void> {
     // First, delete all related tasks
-    const tasks = await this.getTasksByMilestone(id);
-    await Promise.all(tasks.map(task => this.deleteTask(task.id, id)));
+    const tasks = await this.getTasksByMilestone(id, projectId);
+    await Promise.all(tasks.map(task => this.deleteTask(task.id, id, projectId)));
     
     // Then delete the milestone
-    await this.storageService.deleteMilestone(id);
+    await this.storageService.deleteMilestone(id, projectId);
   }
 
   async getAllMilestones(): Promise<Milestone[]> {
@@ -156,13 +156,19 @@ export class ProjectManager {
   }
 
   // Task Management
-  async createTask(
+  async createTask({
+    name, 
+    milestoneId, 
+    resourceId,
+    assignedUserIds = [],
+    description
+  }: {
     name: string, 
     milestoneId: string, 
     resourceId: string,
-    assignedUserIds: string[] = [],
+    assignedUserIds: string[],
     description?: string
-  ): Promise<Task> {
+  }, projectId: string): Promise<Task> {
     const input: CreateTaskInput = {
       type: 'task',
       name,
@@ -172,27 +178,27 @@ export class ProjectManager {
       status: 'open',
       description
     };
-    return this.storageService.createTask(input);
+    return this.storageService.createTask(input, projectId);
   }
 
-  async getTask(id: string, milestoneId: string): Promise<Task | null> {
-    return this.storageService.getTask(id, milestoneId);
+  async getTask(id: string, milestoneId: string, projectId: string): Promise<Task | null> {
+    return this.storageService.getTask(id, milestoneId, projectId);
   }
 
-  async updateTask(task: Task, milestoneId: string): Promise<Task> {
-    return this.storageService.updateTask(task, milestoneId);
+  async updateTask(task: Task, milestoneId: string, projectId: string): Promise<Task> {
+    return this.storageService.updateTask(task, milestoneId, projectId);
   }
 
-  async deleteTask(id: string, milestoneId: string): Promise<void> {
-    await this.storageService.deleteTask(id, milestoneId);
+  async deleteTask(id: string, milestoneId: string, projectId: string): Promise<void> {
+    await this.storageService.deleteTask(id, milestoneId, projectId);
   }
 
   async getAllTasks(): Promise<Task[]> {
     return this.storageService.getAllTasks();
   }
 
-  async getTasksByMilestone(milestoneId: string): Promise<Task[]> {
-    return this.storageService.getTasksByMilestone(milestoneId);
+  async getTasksByMilestone(milestoneId: string, projectId: string): Promise<Task[]> {
+    return this.storageService.getTasksByMilestone(milestoneId, projectId);
   }
 
   async getTasksByUser(userId: string): Promise<Task[]> {

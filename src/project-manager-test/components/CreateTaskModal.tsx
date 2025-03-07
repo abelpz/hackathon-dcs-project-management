@@ -36,11 +36,12 @@ export function CreateTaskModal({ isOpen, onClose, milestone, onTaskCreated }: C
       }
 
       await projectManager.createTask(
-        name.trim(),
-        milestone.id,
-        selectedResource,
-        [],
-        description.trim()
+        {name: name.trim(),
+        milestoneId: milestone.id,
+        resourceId: selectedResource,
+        assignedUserIds: [],
+        description: description.trim()},
+        milestone.projectId
       );
 
       onTaskCreated();
@@ -49,6 +50,7 @@ export function CreateTaskModal({ isOpen, onClose, milestone, onTaskCreated }: C
       setDescription('');
       setSelectedResource('');
     } catch (err) {
+      console.error('Error creating task:', err);
       setError(err instanceof Error ? err.message : 'Failed to create task');
     } finally {
       setIsLoading(false);

@@ -7,9 +7,10 @@ import type { Milestone, Task } from '../../../theia-tpm/translation-project-man
 interface MilestoneDetailsProps {
   milestoneId: string;
   onBack: () => void;
+  projectId: string;
 }
 
-export function MilestoneDetails({ milestoneId, onBack }: MilestoneDetailsProps) {
+export function MilestoneDetails({ milestoneId, onBack, projectId }: MilestoneDetailsProps) {
   const { projectManager } = useProjectManager();
   const [milestone, setMilestone] = useState<Milestone | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -28,12 +29,13 @@ export function MilestoneDetails({ milestoneId, onBack }: MilestoneDetailsProps)
       setIsLoading(true);
       setError(null);
       const [milestoneData, tasksData] = await Promise.all([
-        projectManager.getMilestone(milestoneId),
-        projectManager.getTasksByMilestone(milestoneId)
+        projectManager.getMilestone(milestoneId, projectId),
+        projectManager.getTasksByMilestone(milestoneId, projectId)
       ]);
       setMilestone(milestoneData);
       setTasks(tasksData);
     } catch (err) {
+      console.error('Error loading milestone details:', err);
       setError(err instanceof Error ? err.message : 'Failed to load milestone details');
     } finally {
       setIsLoading(false);
@@ -47,7 +49,7 @@ export function MilestoneDetails({ milestoneId, onBack }: MilestoneDetailsProps)
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <Header title="Milestone Details" onBack={onBack} />
+        <Header title="Milestone Details Loading..." onBack={onBack} />
         <div className="flex items-center justify-center h-full">
           <div className="text-gray-600">Loading milestone details...</div>
         </div>
